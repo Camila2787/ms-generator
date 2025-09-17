@@ -1,14 +1,15 @@
 "use strict";
 
 const uuidv4 = require("uuid/v4");
-const { of, forkJoin, from, iif, throwError, Subject, interval } = require("rxjs");
-const { mergeMap, catchError, map, toArray, pluck, takeUntil } = require('rxjs/operators');
+const { of, forkJoin, from, Subject, interval, iif, throwError } = require("rxjs");
+const { mergeMap, catchError, map, toArray, takeUntil } = require('rxjs/operators');
+
 const crypto = require('crypto');
 
 const Event = require("@nebulae/event-store").Event;
 const { CqrsResponseHelper } = require('@nebulae/backend-node-tools').cqrs;
 const { ConsoleLogger } = require('@nebulae/backend-node-tools').log;
-const { CustomError, INTERNAL_SERVER_ERROR_CODE, PERMISSION_DENIED } = require("@nebulae/backend-node-tools").error;
+const { CustomError } = require("@nebulae/backend-node-tools").error;
 const { brokerFactory } = require("@nebulae/backend-node-tools").broker;
 
 const broker = brokerFactory();
@@ -19,65 +20,33 @@ const READ_ROLES = ["VEHICLE_READ"];
 const WRITE_ROLES = ["VEHICLE_WRITE"];
 const REQUIRED_ATTRIBUTES = [];
 
-// Topics
+// Tópico para MV que ya usa el template
 const MATERIALIZED_VIEW_TOPIC = "generator-ui-gateway-materialized-view-updates";
-const MQTT_TOPIC = "fleet/vehicles/generated";
 
-/**
- * Estado del generador (en memoria)
- */
-const genState = {
-  running: false,
-  stop$: null,
-  sub: null,
-  total: 0
-};
+// === Config de publicación de eventos generados (requerimiento) ===
+const MQTT_TOPIC_GENERATED = process.env.MQTT_TOPIC_GENERATED || "fleet/vehicles/generated";
 
-// ===== utilidades de generación =====
-function rand(min, max){ return min + Math.floor(Math.random() * (max - min + 1)); }
-function randomVehicleData(){
-  const types = ['SUV','PickUp','Sedan'];
-  const powerSources = ['Electric','Hybrid','Gas'];
-  return {
-    type: types[rand(0, types.length-1)],
-    powerSource: powerSources[rand(0, powerSources.length-1)],
-    hp: rand(75, 300),
-    year: rand(1980, 2025),
-    topSpeed: rand(120, 320)
-  };
-}
-function canonical(v){
-  // orden estable = clave para hash idéntico ante los mismos datos
+// === Estado del generador ===
+let isGenerating = false;
+let generatedCount = 0;
+const stop$ = new Subject();
+
+/** Utils random + AID */
+const TYPES = ["SUV", "PickUp", "Sedan"];
+const POWER = ["Electric", "Hybrid", "Gas"];
+
+function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+function canonicalVehicle(v) {
+  // orden estable para el hash
   return `${v.type}|${v.powerSource}|${v.hp}|${v.year}|${v.topSpeed}`;
 }
-function makeAid(v){
-  return crypto.createHash('sha256').update(canonical(v)).digest('hex');
-}
-function publishStatus(){
-  const status = {
-    isGenerating: genState.running,
-    generatedCount: genState.total,
-    status: genState.running ? 'Corriendo…' : 'Detenido'
-  };
-  broker.send$(MATERIALIZED_VIEW_TOPIC, "GeneratorStatus", status).subscribe({
-    error: (e) => ConsoleLogger.e(`Error publishing status: ${e && e.message || e}`)
-  });
-}
-function publishVehicle(evt){
-  // a MQTT (para ms-reporter)
-  broker.send$(MQTT_TOPIC, "VehicleGenerated", evt).subscribe({
-    error: (e) => ConsoleLogger.e(`MQTT publish error: ${e && e.message || e}`)
-  });
-  // a Gateway (para subscriptions del front)
-  broker.send$(MATERIALIZED_VIEW_TOPIC, "GeneratorVehicleGenerated", evt).subscribe({
-    error: (e) => ConsoleLogger.e(`MV publish error: ${e && e.message || e}`)
-  });
+function makeAid(v) {
+  return crypto.createHash('sha256').update(canonicalVehicle(v)).digest('hex');
 }
 
-/**
- * Singleton instance
- * @type { VehicleCRUD }
- */
+// Singleton instance
 let instance;
 
 class VehicleCRUD {
@@ -89,25 +58,25 @@ class VehicleCRUD {
   generateRequestProcessorMap() {
     return {
       'Vehicle': {
-        // --- CRUD que ya traía el template ---
+        // === LISTING / CRUD existentes ===
         "generator-uigateway.graphql.query.GeneratorVehicleListing": { fn: instance.getGeneratorVehicleListing$, instance, jwtValidation: { roles: READ_ROLES, attributes: REQUIRED_ATTRIBUTES } },
         "generator-uigateway.graphql.query.GeneratorVehicle": { fn: instance.getVehicle$, instance, jwtValidation: { roles: READ_ROLES, attributes: REQUIRED_ATTRIBUTES } },
         "generator-uigateway.graphql.mutation.GeneratorCreateVehicle": { fn: instance.createVehicle$, instance, jwtValidation: { roles: WRITE_ROLES, attributes: REQUIRED_ATTRIBUTES } },
         "generator-uigateway.graphql.mutation.GeneratorUpdateVehicle": { fn: instance.updateVehicle$, jwtValidation: { roles: WRITE_ROLES, attributes: REQUIRED_ATTRIBUTES } },
         "generator-uigateway.graphql.mutation.GeneratorDeleteVehicles": { fn: instance.deleteVehicles$, jwtValidation: { roles: WRITE_ROLES, attributes: REQUIRED_ATTRIBUTES } },
 
-        // --- NUEVO: control del generador ---
-        // Nota: en dev puedes dejar roles vacíos [] para evitar JWT;
-        // si ya tienes Keycloak listo, cambia [] -> WRITE_ROLES/READ_ROLES.
-        "generator-uigateway.graphql.mutation.GeneratorStartGeneration": { fn: instance.GeneratorStartGeneration$, instance, jwtValidation: { roles: [], attributes: [] } },
-        "generator-uigateway.graphql.query.GeneratorStopGeneration": { fn: instance.GeneratorStopGeneration$, instance, jwtValidation: { roles: [], attributes: [] } },
-        "generator-uigateway.graphql.query.GeneratorGenerationStatus": { fn: instance.GeneratorGenerationStatus$, instance, jwtValidation: { roles: [], attributes: [] } },
+        // === NUEVOS: CONTROL DEL GENERADOR ===
+        // Start = Mutation (WRITE)
+        "generator-uigateway.graphql.mutation.GeneratorStartGeneration": { fn: instance.startGeneration$, instance, jwtValidation: { roles: WRITE_ROLES, attributes: REQUIRED_ATTRIBUTES } },
+        // Stop  = Query (READ)
+        "generator-uigateway.graphql.query.GeneratorStopGeneration": { fn: instance.stopGeneration$, instance, jwtValidation: { roles: READ_ROLES, attributes: REQUIRED_ATTRIBUTES } },
       }
     }
   };
 
-  // ====== CRUD (como venía) ======
-
+  /**  
+   * Gets the Vehicle list
+   */
   getGeneratorVehicleListing$({ args }, authToken) {
     const { filterInput, paginationInput, sortInput } = args;
     const { queryTotalResultCount = false } = paginationInput || {};
@@ -122,6 +91,9 @@ class VehicleCRUD {
     );
   }
 
+  /**  
+   * Gets the Vehicle by id
+   */
   getVehicle$({ args }, authToken) {
     const { id, organizationId } = args;
     return VehicleDA.getVehicle$(id, organizationId).pipe(
@@ -130,12 +102,12 @@ class VehicleCRUD {
     );
   }
 
+  /**
+  * Create a Vehicle
+  */
   createVehicle$({ root, args, jwt }, authToken) {
     const aggregateId = uuidv4();
-    const input = {
-      active: false,
-      ...args.input,
-    };
+    const input = { active: false, ...args.input };
 
     return VehicleDA.createVehicle$(aggregateId, input, authToken.preferred_username).pipe(
       mergeMap(aggregate => forkJoin(
@@ -148,6 +120,9 @@ class VehicleCRUD {
     )
   }
 
+  /**
+   * updates a Vehicle 
+   */
   updateVehicle$({ root, args, jwt }, authToken) {
     const { id, input, merge } = args;
 
@@ -162,6 +137,9 @@ class VehicleCRUD {
     )
   }
 
+  /**
+   * deletes Vehicles
+   */
   deleteVehicles$({ root, args, jwt }, authToken) {
     const { ids } = args;
     return forkJoin(
@@ -171,95 +149,98 @@ class VehicleCRUD {
         toArray()
       )
     ).pipe(
-      map(([ok, esResps]) => ({ code: ok ? 200 : 400, message: `Vehicle with id:s ${JSON.stringify(ids)} ${ok ? "has been deleted" : "not found for deletion"}` })),
+      map(([ok]) => ({ code: ok ? 200 : 400, message: `Vehicle with id:s ${JSON.stringify(ids)} ${ok ? "has been deleted" : "not found for deletion"}` })),
       mergeMap((r) => forkJoin(
         CqrsResponseHelper.buildSuccessResponse$(r),
         broker.send$(MATERIALIZED_VIEW_TOPIC, `GeneratorVehicleModified`, { id: 'deleted', name: '', active: false, description: '' })
       )),
-      map(([cqrsResponse, brokerRes]) => cqrsResponse),
+      map(([cqrsResponse]) => cqrsResponse),
       catchError(err => iif(() => err.name === 'MongoTimeoutError', throwError(err), CqrsResponseHelper.handleError$(err)))
     );
   }
 
-  buildAggregateMofifiedEvent(modType, aggregateType, aggregateId, authToken, data) {
-    return new Event({
-      eventType: `${aggregateType}Modified`,
-      eventTypeVersion: 1,
-      aggregateType: aggregateType,
-      aggregateId,
-      data: {
-        modType,
-        ...data
-      },
-      user: authToken.preferred_username
-    })
-  }
+  // ========= NUEVO: CONTROL DEL GENERADOR =========
 
-  // ====== NUEVO: Start / Stop / Status ======
-
-  GeneratorStartGeneration$() {
-    if (genState.running) {
-      publishStatus();
-      return of({ code: 200, message: 'Generator already running' })
-        .pipe(mergeMap(CqrsResponseHelper.buildSuccessResponse$));
+  /**
+   * START (Mutation)
+   * - Inicia interval(50) hasta que llegue stop$
+   * - Publica cada vehículo en el tópico MQTT_TOPIC_GENERATED vía broker
+   */
+  startGeneration$({ root, args, jwt }, authToken) {
+    if (isGenerating) {
+      ConsoleLogger.w(`[Generator] Already running. user=${authToken && authToken.preferred_username}`);
+      return CqrsResponseHelper.buildSuccessResponse$({ code: 200, message: `Generator already running. total=${generatedCount}` });
     }
 
-    genState.stop$ = new Subject();
-    genState.running = true;
+    ConsoleLogger.i(`[Generator] START requested by ${authToken && authToken.preferred_username}`);
+    isGenerating = true;
 
-    genState.sub = interval(50).pipe(takeUntil(genState.stop$)).subscribe({
+    interval(50).pipe(takeUntil(stop$)).subscribe({
       next: () => {
-        const data = randomVehicleData();
-        const evt = {
+        const data = {
+          type: pick(TYPES),
+          powerSource: pick(POWER),
+          hp: randInt(75, 300),
+          year: randInt(1980, 2025),
+          topSpeed: randInt(120, 320),
+        };
+        const msg = {
           at: 'Vehicle',
           et: 'Generated',
           aid: makeAid(data),
           timestamp: new Date().toISOString(),
           data
         };
-        genState.total += 1;
-        publishVehicle(evt);
+        // Publicar por broker al tópico requerido
+        broker.send$(MQTT_TOPIC_GENERATED, 'VehicleGenerated', msg).subscribe(
+          () => {},
+          err => ConsoleLogger.e(`[Generator] publish error: ${err && err.message}`),
+          () => {}
+        );
+        generatedCount++;
       },
-      error: (e) => ConsoleLogger.e(`stream error: ${e && e.message || e}`),
-      complete: () => ConsoleLogger.i('stream completed')
+      error: (err) => {
+        ConsoleLogger.e(`[Generator] stream error: ${err && err.message}`);
+      },
+      complete: () => {
+        ConsoleLogger.i(`[Generator] stream completed`);
+      }
     });
 
-    publishStatus();
-    return of({ code: 200, message: 'Generation started' })
-      .pipe(mergeMap(CqrsResponseHelper.buildSuccessResponse$));
+    return CqrsResponseHelper.buildSuccessResponse$({ code: 200, message: 'Generator started' });
   }
 
-  GeneratorStopGeneration$() {
-    if (!genState.running) {
-      publishStatus();
-      return of({ code: 200, message: 'Generator already stopped' })
-        .pipe(mergeMap(CqrsResponseHelper.buildSuccessResponse$));
+  /**
+   * STOP (Query)
+   * - Detiene el stream
+   */
+  stopGeneration$({ root, args, jwt }, authToken) {
+    if (!isGenerating) {
+      ConsoleLogger.w(`[Generator] Stop requested but generator is not running`);
+      return CqrsResponseHelper.buildSuccessResponse$({ code: 200, message: 'Generator already stopped' });
     }
-
-    try { genState.stop$.next(true); genState.stop$.complete(); } catch(_) {}
-    try { if (genState.sub) genState.sub.unsubscribe(); } catch(_) {}
-    genState.stop$ = null;
-    genState.sub = null;
-    genState.running = false;
-
-    publishStatus();
-    return of({ code: 200, message: 'Generation stopped' })
-      .pipe(mergeMap(CqrsResponseHelper.buildSuccessResponse$));
+    ConsoleLogger.i(`[Generator] STOP requested by ${authToken && authToken.preferred_username}`);
+    stop$.next(true);
+    isGenerating = false;
+    return CqrsResponseHelper.buildSuccessResponse$({ code: 200, message: `Generator stopped. total=${generatedCount}` });
   }
 
-  GeneratorGenerationStatus$() {
-    const s = {
-      isGenerating: genState.running,
-      generatedCount: genState.total,
-      status: genState.running ? 'Corriendo…' : 'Detenido'
-    };
-    return of(s).pipe(mergeMap(CqrsResponseHelper.buildSuccessResponse$));
+  /**
+   * Build Modified Event 
+   */
+  buildAggregateMofifiedEvent(modType, aggregateType, aggregateId, authToken, data) {
+    return new Event({
+      eventType: `${aggregateType}Modified`,
+      eventTypeVersion: 1,
+      aggregateType: aggregateType,
+      aggregateId,
+      data: { modType, ...data },
+      user: authToken.preferred_username
+    })
   }
 }
 
-/**
- * @returns {VehicleCRUD}
- */
+/** @returns {VehicleCRUD} */
 module.exports = () => {
   if (!instance) {
     instance = new VehicleCRUD();
