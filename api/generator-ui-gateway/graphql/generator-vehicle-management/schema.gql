@@ -15,25 +15,24 @@ type GeneratorVehicle {
   "Vehicle description"
   description: String
   "Vehicle active flag"
-  active: Boolean!  
+  active: Boolean!
   "object metadata"
   metadata: GeneratorVehicleMetadata
 }
 
 type GeneratorVehicleMetadata {
-    createdBy: String
-		createdAt: BigInt
-		updatedBy: String
-		updatedAt: BigInt
+  createdBy: String
+  createdAt: BigInt
+  updatedBy: String
+  updatedAt: BigInt
 }
 
 type GeneratorVehicleListing {
   "Listing"
   listing: [GeneratorVehicle]
   "query total result count"
-  queryTotalResultCount: Int,  
+  queryTotalResultCount: Int
 }
-
 
 input GeneratorVehicleFilterInput {
   "Name"
@@ -54,8 +53,8 @@ input GeneratorVehiclePaginationInput {
 }
 
 input GeneratorVehicleSortInput {
-  field: String!,
-  asc: Boolean!,
+  field: String!
+  asc: Boolean!
 }
 
 input GeneratorVehicleInput {
@@ -69,25 +68,67 @@ input GeneratorVehicleInput {
   active: Boolean
 }
 
+# ----- NUEVOS tipos de control del generador -----
+type GenericResponse {
+  code: Int!
+  message: String!
+}
+
+type GeneratorStatus {
+  isGenerating: Boolean!
+  generatedCount: Int!
+  status: String!
+}
+
+type GeneratorVehicleData {
+  type: String!
+  powerSource: String!
+  hp: Int!
+  year: Int!
+  topSpeed: Int!
+}
+
+type GeneratorVehicleEvent {
+  at: String!
+  et: String!
+  aid: ID!
+  timestamp: String!
+  data: GeneratorVehicleData!
+}
 
 type Query {
   "Get Vehicles filtered "
-  GeneratorVehicleListing(filterInput: GeneratorVehicleFilterInput, paginationInput: GeneratorVehiclePaginationInput, sortInput: GeneratorVehicleSortInput): GeneratorVehicleListing
+  GeneratorVehicleListing(
+    filterInput: GeneratorVehicleFilterInput,
+    paginationInput: GeneratorVehiclePaginationInput,
+    sortInput: GeneratorVehicleSortInput
+  ): GeneratorVehicleListing
+
   "Get Vehicle by its id"
   GeneratorVehicle(id: ID!, organizationId: String!): GeneratorVehicle
+
+  # Control del generador
+  GeneratorStopGeneration: GenericResponse!
+  GeneratorGenerationStatus: GeneratorStatus!
 }
 
 type Mutation {
   "Create a new Vehicle"
   GeneratorCreateVehicle(input: GeneratorVehicleInput!): GeneratorVehicle
   "Update an Vehicle"
-  GeneratorUpdateVehicle(id: ID!, input: GeneratorVehicleInput!, merge: Boolean!): GeneratorVehicle  
+  GeneratorUpdateVehicle(id: ID!, input: GeneratorVehicleInput!, merge: Boolean!): GeneratorVehicle
   "Deletes an Vehicle"
-  GeneratorDeleteVehicles(ids: [ID]!): CommandResponse  
-}
+  GeneratorDeleteVehicles(ids: [ID]!): CommandResponse
 
+  # Control del generador
+  GeneratorStartGeneration: GenericResponse!
+}
 
 type Subscription {
   "This events is triggered when a vehicle updated or deleted"
   GeneratorVehicleModified(id: ID!): GeneratorVehicle
+
+  # Opcionales para UI en vivo
+  GeneratorStatus: GeneratorStatus!
+  GeneratorVehicleGenerated: GeneratorVehicleEvent!
 }

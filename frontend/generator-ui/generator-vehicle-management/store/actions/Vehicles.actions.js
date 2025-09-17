@@ -1,8 +1,12 @@
 import { defer } from 'rxjs';
 import { mergeMap, map } from 'rxjs/operators';
-
 import graphqlService from '../../../../services/graphqlService';
+
+// GQL ya existentes para listing/delete
 import { GeneratorVehicleListing, GeneratorDeleteVehicle } from '../../gql/Vehicle';
+
+// NUEVO: GQL para start/stop
+import { START_GENERATION_GQL, STOP_GENERATION_GQL } from '../../gql/Vehicle';
 
 export const SET_VEHICLES = '[VEHICLE_MNG] SET VEHICLES';
 export const SET_VEHICLES_PAGE = '[VEHICLE_MNG] SET VEHICLES PAGE';
@@ -17,18 +21,18 @@ export const SET_VEHICLES_FILTERS_ACTIVE = '[VEHICLE_MNG] SET VEHICLES FILTERS A
  * @param {Object} queryParams 
  */
 function getListingQueryArguments({ filters: { name, organizationId, active }, order, page, rowsPerPage }) {
-    const args = {
-        "filterInput": { organizationId },
-        "paginationInput": { "page": page, "count": rowsPerPage, "queryTotalResultCount": (page === 0) },
-        "sortInput": order.id ? { "field": order.id, "asc": order.direction === "asc" } : undefined
-    };
-    if (name.trim().length > 0) {
-        args.filterInput.name = name;
-    }
-    if (active !== null) {
-        args.filterInput.active = active;
-    }
-    return args;
+  const args = {
+    "filterInput": { organizationId },
+    "paginationInput": { "page": page, "count": rowsPerPage, "queryTotalResultCount": (page === 0) },
+    "sortInput": order.id ? { "field": order.id, "asc": order.direction === "asc" } : undefined
+  };
+  if (name.trim().length > 0) {
+    args.filterInput.name = name;
+  }
+  if (active !== null) {
+    args.filterInput.active = active;
+  }
+  return args;
 }
 
 /**
@@ -36,13 +40,14 @@ function getListingQueryArguments({ filters: { name, organizationId, active }, o
  * @param {{ filters, order, page, rowsPerPage }} queryParams
  */
 export function getVehicles({ filters, order, page, rowsPerPage }) {
-    const args = getListingQueryArguments({ filters, order, page, rowsPerPage });    
-    return (dispatch) => graphqlService.client.query(GeneratorVehicleListing(args)).then(result => {
-        return dispatch({
-            type: SET_VEHICLES,
-            payload: result.data.GeneratorVehicleListing
-        });
-    })
+  const args = getListingQueryArguments({ filters, order, page, rowsPerPage });
+  return (dispatch) =>
+    graphqlService.client.query(GeneratorVehicleListing(args)).then(result => {
+      return dispatch({
+        type: SET_VEHICLES,
+        payload: result.data.GeneratorVehicleListing
+      });
+    });
 }
 
 /**
@@ -51,16 +56,17 @@ export function getVehicles({ filters, order, page, rowsPerPage }) {
  * @param {*} param1 
  */
 export function removeVehicles(selectedForRemovalIds, { filters, order, page, rowsPerPage }) {
-    const deleteArgs = { ids: selectedForRemovalIds };
-    const listingArgs = getListingQueryArguments({ filters, order, page, rowsPerPage });
-    return (dispatch) => defer(() => graphqlService.client.mutate(GeneratorDeleteVehicle(deleteArgs))).pipe(
-        mergeMap(() => defer(() => graphqlService.client.query(GeneratorVehicleListing(listingArgs)))),
-        map((result) =>
-            dispatch({
-                type: SET_VEHICLES,
-                payload: result.data.GeneratorVehicleListing
-            })
-        )
+  const deleteArgs = { ids: selectedForRemovalIds };
+  const listingArgs = getListingQueryArguments({ filters, order, page, rowsPerPage });
+  return (dispatch) =>
+    defer(() => graphqlService.client.mutate(GeneratorDeleteVehicle(deleteArgs))).pipe(
+      mergeMap(() => defer(() => graphqlService.client.query(GeneratorVehicleListing(listingArgs)))),
+      map((result) =>
+        dispatch({
+          type: SET_VEHICLES,
+          payload: result.data.GeneratorVehicleListing
+        })
+      )
     ).toPromise();
 }
 
@@ -69,10 +75,10 @@ export function removeVehicles(selectedForRemovalIds, { filters, order, page, ro
  * @param {int} page 
  */
 export function setVehiclesPage(page) {
-    return {
-        type: SET_VEHICLES_PAGE,
-        page
-    }
+  return {
+    type: SET_VEHICLES_PAGE,
+    page
+  };
 }
 
 /**
@@ -80,10 +86,10 @@ export function setVehiclesPage(page) {
  * @param {*} rowsPerPage 
  */
 export function setVehiclesRowsPerPage(rowsPerPage) {
-    return {
-        type: SET_VEHICLES_ROWS_PER_PAGE,
-        rowsPerPage
-    }
+  return {
+    type: SET_VEHICLES_ROWS_PER_PAGE,
+    rowsPerPage
+  };
 }
 
 /**
@@ -91,21 +97,21 @@ export function setVehiclesRowsPerPage(rowsPerPage) {
  * @param {*} order 
  */
 export function setVehiclesOrder(order) {
-    return {
-        type: SET_VEHICLES_ORDER,
-        order
-    }
+  return {
+    type: SET_VEHICLES_ORDER,
+    order
+  };
 }
 
 /**
  * Set the name filter
  * @param {string} name 
  */
-export function setVehiclesFilterName(name) {    
-    return {
-        type: SET_VEHICLES_FILTERS_NAME,
-        name
-    }
+export function setVehiclesFilterName(name) {
+  return {
+    type: SET_VEHICLES_FILTERS_NAME,
+    name
+  };
 }
 
 /**
@@ -113,22 +119,49 @@ export function setVehiclesFilterName(name) {
  * @param {boolean} active 
  */
 export function setVehiclesFilterActive(active) {
-    return {
-        type: SET_VEHICLES_FILTERS_ACTIVE,
-        active
-    }
+  return {
+    type: SET_VEHICLES_FILTERS_ACTIVE,
+    active
+  };
 }
 
 /**
  * set the organizationId filter
  * @param {string} organizationId 
  */
-export function setVehiclesFilterOrganizationId(organizationId) {    
-    return {
-        type: SET_VEHICLES_FILTERS_ORGANIZATION_ID,
-        organizationId
-    }
+export function setVehiclesFilterOrganizationId(organizationId) {
+  return {
+    type: SET_VEHICLES_FILTERS_ORGANIZATION_ID,
+    organizationId
+  };
 }
 
+/* =========================================================================
+ * NUEVO: acciones thunk para controlar el generador en el backend
+ * - startGeneration: MUTATION
+ * - stopGeneration:  QUERY
+ * Usamos graphqlService.client para que herede la config (auth headers, etc.)
+ * ========================================================================= */
 
+export function startGeneration() {
+  return function (dispatch) {
+    // MUTATION
+    return graphqlService.client
+      .mutate({ mutation: START_GENERATION_GQL })
+      .then(function (res) {
+        // si quieres, aquí puedes disparar un toast con res.data.GeneratorStartGeneration.message
+        return res;
+      });
+  };
+}
 
+export function stopGeneration() {
+  return function (dispatch) {
+    // QUERY (según el enunciado)
+    return graphqlService.client
+      .query({ query: STOP_GENERATION_GQL, fetchPolicy: 'no-cache' })
+      .then(function (res) {
+        return res;
+      });
+  };
+}

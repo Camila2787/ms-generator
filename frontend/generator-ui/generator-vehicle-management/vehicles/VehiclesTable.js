@@ -10,6 +10,9 @@ import { MDText } from 'i18n-react';
 import i18n from "../i18n";
 import { onGeneratorVehicleModified } from "../gql/Vehicle";
 
+
+
+
 function VehiclesTable(props) {
     const dispatch = useDispatch();
     const vehicles = useSelector(({ VehicleManagement }) => VehicleManagement.vehicles.data);
@@ -172,3 +175,7 @@ function VehiclesTable(props) {
 }
 
 export default withRouter(VehiclesTable);
+
+
+
+//import * as Actions from '../store/actions';

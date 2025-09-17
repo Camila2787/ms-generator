@@ -1,90 +1,119 @@
-import React, { useState, useEffect } from 'react';
-import { Paper, Button, Input, Icon, Typography, Hidden, IconButton } from '@material-ui/core';
-import { ThemeProvider } from '@material-ui/styles';
-import { FuseAnimate } from '@fuse';
-import { useDispatch, useSelector } from 'react-redux';
-import { Link } from 'react-router-dom';
+import React from 'react';
+import { useDispatch } from 'react-redux';
+import { useQuery, useSubscription } from '@apollo/react-hooks';
+import { gql } from 'apollo-boost';
 import * as Actions from '../store/actions';
-import { MDText } from 'i18n-react';
-import i18n from "../i18n";
-import _ from '@lodash';
-import { useEventCallback } from 'rxjs-hooks'
-import { debounceTime } from "rxjs/operators";
+
+/** ==== GQL locales al Header (evita imports rotos) ==== */
+const GET_GENERATION_STATUS_GQL = gql`
+  query {
+    GeneratorGenerationStatus {
+      isGenerating
+      generatedCount
+      status
+    }
+  }
+`;
+
+const ON_GENERATOR_STATUS = gql`
+  subscription {
+    GeneratorStatus {
+      isGenerating
+      generatedCount
+      status
+    }
+  }
+`;
 
 function VehiclesHeader(props) {
-    const dispatch = useDispatch();
-    const user = useSelector(({ auth }) => auth.user);
-    const mainTheme = useSelector(({ fuse }) => fuse.settings.mainTheme);
-    const searchTextFilter = useSelector(({ VehicleManagement }) => VehicleManagement.vehicles.filters.name);
-    const [searchText, setSearchText] = useState(searchTextFilter)
-    const [keywordCallBack, keyword] = useEventCallback(
-        (event$) => event$.pipe(debounceTime(500))
-    )
+  const dispatch = useDispatch();
 
-    const T = new MDText(i18n.get(user.locale));
+  // Estado local mostrado en el header
+  const [running, setRunning] = React.useState(false);
+  const [count, setCount] = React.useState(0);
+  const [statusText, setStatusText] = React.useState('—');
 
-    function handleSearchChange(evt) {
-        keywordCallBack(evt.target.value);
-        setSearchText(evt.target.value);
+  // ===== Query inicial de estado =====
+  const statusQuery = useQuery(GET_GENERATION_STATUS_GQL, { fetchPolicy: 'network-only' });
+
+  React.useEffect(function () {
+    try {
+      const data = statusQuery && statusQuery.data ? statusQuery.data.GeneratorGenerationStatus : null;
+      if (data) {
+        setRunning(!!data.isGenerating);
+        setCount(typeof data.generatedCount === 'number' ? data.generatedCount : 0);
+        setStatusText(data.status || (data.isGenerating ? 'Corriendo…' : 'Detenido'));
+      }
+    } catch (e) {
+      // silencio para no ensuciar consola si el backend aún no expone la query
     }
-    useEffect(() => {
-        if (keyword !== undefined && keyword !== null)
-            dispatch(Actions.setVehiclesFilterName(keyword))
-    }, [keyword]);
+  }, [statusQuery && statusQuery.data]);
 
-    return (
-        <div className="flex flex-1 w-full items-center justify-between">
+  // ===== Subscription para mantener estado vivo =====
+  const statusSub = useSubscription(ON_GENERATOR_STATUS);
+  React.useEffect(function () {
+    try {
+      const d = statusSub && statusSub.data ? statusSub.data.GeneratorStatus : null;
+      if (d) {
+        setRunning(!!d.isGenerating);
+        setCount(typeof d.generatedCount === 'number' ? d.generatedCount : 0);
+        setStatusText(d.status || (d.isGenerating ? 'Corriendo…' : 'Detenido'));
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, [statusSub && statusSub.data]);
 
-            <Hidden lgUp>
-                <IconButton
-                    onClick={(ev) => props.pageLayout.current.toggleLeftSidebar()}
-                    aria-label="open left sidebar"
-                >
-                    <Icon>filter_list</Icon>
-                </IconButton>
-            </Hidden>
+  function onStart() {
+    // usa tus actions re-exportadas en ../store/actions
+    dispatch(Actions.startGeneration())
+      .then(function () {
+        setRunning(true);
+        setStatusText('Corriendo…');
+      })
+      .catch(function () { /* ignore para pruebas locales */ });
+  }
 
-            <div className="flex items-center">
-                <FuseAnimate animation="transition.expandIn" delay={300}>
-                    <Icon className="text-32 mr-0 sm:mr-12">business</Icon>
-                </FuseAnimate>
-                <FuseAnimate animation="transition.slideLeftIn" delay={300}>
-                    <Typography className="hidden sm:flex" variant="h6">{T.translate("vehicles.vehicles")} </Typography>
-                </FuseAnimate>
-            </div>
+  function onStop() {
+    dispatch(Actions.stopGeneration())
+      .then(function () {
+        setRunning(false);
+        setStatusText('Detenido');
+      })
+      .catch(function () { /* ignore */ });
+  }
 
-            <div className="flex flex-1 items-center justify-center px-12">
+  return (
+    <div className="p-16 w-full flex items-center justify-between">
+      <h1 className="text-24 font-700">GENERADOR DE FLOTA VEHICULAR</h1>
 
-                <ThemeProvider theme={mainTheme}>
-                    <FuseAnimate animation="transition.slideDownIn" delay={300}>
-                        <Paper className="flex items-center w-full max-w-512 px-8 py-4 rounded-8" elevation={1}>
-
-                            <Icon className="mr-8" color="action">search</Icon>
-
-                            <Input
-                                placeholder={T.translate("vehicles.search")}
-                                className="flex flex-1"
-                                disableUnderline
-                                fullWidth
-                                value={searchText}
-                                inputProps={{
-                                    'aria-label': 'Search'
-                                }}
-                                onChange={handleSearchChange}
-                            />
-                        </Paper>
-                    </FuseAnimate>
-                </ThemeProvider>
-
-            </div>
-            <FuseAnimate animation="transition.slideRightIn" delay={300}>
-                <Button component={Link} to="/vehicle-mng/vehicles/new" className="whitespace-no-wrap" variant="contained">
-                    <span className="hidden sm:flex">{T.translate("vehicles.add_new_vehicle")}</span>
-                    <span className="flex sm:hidden">{T.translate("vehicles.add_new_vehicle_short")}</span>
-                </Button>
-            </FuseAnimate>
+      <div className="flex items-center gap-16">
+        {/* Bloque de estado compacto en el header */}
+        <div className="text-right mr-8">
+          <div className="text-12 opacity-75">Estado</div>
+          <div className="text-14 font-600">{statusText}</div>
+          <div className="text-12 opacity-75 mt-4">Vehículos generados</div>
+          <div className="text-14 font-600">{count.toLocaleString()}</div>
         </div>
-    );
+
+        <button
+          onClick={onStart}
+          disabled={running}
+          className="px-12 py-8 rounded bg-green-600 text-white"
+        >
+          Iniciar Simulación
+        </button>
+
+        <button
+          onClick={onStop}
+          disabled={!running}
+          className="px-12 py-8 rounded bg-red-600 text-white"
+        >
+          Detener Simulación
+        </button>
+      </div>
+    </div>
+  );
 }
 
 export default VehiclesHeader;
