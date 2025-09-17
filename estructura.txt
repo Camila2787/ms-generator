@@ -1,0 +1,48 @@
+.
+├── api
+│   ├── emi-gateway
+│   └── generator-ui-gateway
+├── backend
+│   └── generator
+├── deployment
+│   └── gke
+├── docs
+│   ├── images
+│   └── resources
+├── estructura.txt
+├── etc
+│   ├── .gitignore
+│   ├── mapi-setup.json
+│   └── mfe-setup.json
+├── frontend
+│   └── generator-ui
+├── .git
+│   ├── branches
+│   ├── COMMIT_EDITMSG
+│   ├── config
+│   ├── description
+│   ├── FETCH_HEAD
+│   ├── HEAD
+│   ├── hooks
+│   ├── index
+│   ├── info
+│   ├── logs
+│   ├── objects
+│   ├── ORIG_HEAD
+│   └── refs
+├── .gitignore
+├── .gitlab-ci.yml
+├── LICENSE
+├── playground
+│   ├── docker-compose.yml
+│   ├── emi
+│   ├── emi-gateway
+│   ├── generate_playground.sh
+│   ├── .gitignore
+│   └── nats-server.conf
+├── .qodo
+├── README.md
+└── .vscode
+    └── settings.json
+
+26 directories, 20 files

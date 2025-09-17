@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import withReducer from 'app/store/withReducer';
 import VehiclesTable from './VehiclesTable';
 import VehiclesHeader from './VehiclesHeader';
+import LiveGeneratedList from './LiveGeneratedList';
 import reducer from '../store/reducers';
 import {FuseLoading} from '@fuse';
 
@@ -15,7 +16,6 @@ function Vehicles()
     const user = useSelector(({ auth }) => auth.user);
     const pageLayout = useRef(null);
 
-    
     if(!user.selectedOrganization){
         return (<FuseLoading />);
     }
@@ -23,7 +23,7 @@ function Vehicles()
     return (
         <FusePageCarded
             classes={{
-                content: "flex",
+                content: "flex flex-col", // apilamos lista en vivo + tabla
                 //header : "min-h-72 h-72 sm:h-136 sm:min-h-136" // default tall/short header
                 header: "min-h-72 h-72 sm:h-72 sm:min-h-72" // short header always
             }}
@@ -31,9 +31,16 @@ function Vehicles()
                 <VehiclesHeader pageLayout={pageLayout} />
             }
             content={
-                <VehiclesTable/>
-            }
+                <div className="w-full">
+                    {/* Lista en vivo virtualizada */}
+                    <LiveGeneratedList />
 
+                    {/* Tabla CRUD existente */}
+                    <div className="mt-16">
+                        <VehiclesTable/>
+                    </div>
+                </div>
+            }
             leftSidebarHeader={
                 <VehiclesFilterHeader/>
             }

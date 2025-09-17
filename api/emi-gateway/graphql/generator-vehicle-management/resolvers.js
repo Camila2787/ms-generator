@@ -8,7 +8,6 @@ broker = broker.secondaryBroker ? broker.secondaryBroker : broker;
 const RoleValidator = require('../../tools/RoleValidator');
 const { handleError$ } = require('../../tools/GraphqlResponseTools');
 
-const INTERNAL_SERVER_ERROR_CODE = 1;
 const PERMISSION_DENIED_ERROR_CODE = 2;
 const CONTEXT_NAME = "generator";
 
@@ -18,10 +17,12 @@ const WRITE_ROLES = ["VEHICLE_WRITE"];
 function getResponseFromBackEnd$(response) {
   return of(response).pipe(
     map(resp => {
-      if (resp.result.code != 200) {
+      if (resp.result.code !== 200) {
         const err = new Error();
         err.name = 'Error';
-        err.message = resp.result.error;
+        err.message = typeof resp.result.error === 'string'
+          ? resp.result.error
+          : JSON.stringify(resp.result.error || resp.result);
         Error.captureStackTrace(err, 'Error');
         throw err;
       }
@@ -30,18 +31,9 @@ function getResponseFromBackEnd$(response) {
   );
 }
 
-/**
- * Envia la operación al backend validando roles
- */
 function sendToBackEndHandler$(
-  root,
-  OperationArguments,
-  context,
-  requiredRoles,
-  operationType,   // 'query' | 'mutation'
-  aggregateName,   // 'Vehicle'
-  methodName,      // p.ej. 'GeneratorStartGeneration'
-  timeout = 2000
+  root, OperationArguments, context, requiredRoles,
+  operationType, aggregateName, methodName, timeout = 2000
 ) {
   return RoleValidator.checkPermissions$(
     context.authToken.realm_access.roles,
@@ -65,60 +57,41 @@ function sendToBackEndHandler$(
 }
 
 module.exports = {
-
-  //// QUERY ///////
   Query: {
     GeneratorVehicleListing(root, args, context) {
-      return sendToBackEndHandler$(
-        root, args, context, READ_ROLES, 'query', 'Vehicle', 'GeneratorVehicleListing'
-      ).toPromise();
+      return sendToBackEndHandler$(root, args, context, READ_ROLES, 'query', 'Vehicle', 'GeneratorVehicleListing').toPromise();
     },
     GeneratorVehicle(root, args, context) {
-      return sendToBackEndHandler$(
-        root, args, context, READ_ROLES, 'query', 'Vehicle', 'GeneratorVehicle'
-      ).toPromise();
+      return sendToBackEndHandler$(root, args, context, READ_ROLES, 'query', 'Vehicle', 'GeneratorVehicle').toPromise();
     },
-
-    // === NUEVO: STOP como Query ===
     GeneratorStopGeneration(root, args, context) {
-      return sendToBackEndHandler$(
-        root, args, context, READ_ROLES, 'query', 'Vehicle', 'GeneratorStopGeneration',5000
-      ).toPromise();
+      return sendToBackEndHandler$(root, args, context, READ_ROLES, 'query', 'Vehicle', 'GeneratorStopGeneration', 5000).toPromise();
+    },
+    GeneratorGenerationStatus(root, args, context) {
+      return sendToBackEndHandler$(root, args, context, READ_ROLES, 'query', 'Vehicle', 'GeneratorGenerationStatus', 5000).toPromise();
     },
   },
 
-  //// MUTATIONS ///////
   Mutation: {
     GeneratorCreateVehicle(root, args, context) {
-      return sendToBackEndHandler$(
-        root, args, context, WRITE_ROLES, 'mutation', 'Vehicle', 'GeneratorCreateVehicle'
-      ).toPromise();
+      return sendToBackEndHandler$(root, args, context, WRITE_ROLES, 'mutation', 'Vehicle', 'GeneratorCreateVehicle').toPromise();
     },
     GeneratorUpdateVehicle(root, args, context) {
-      return sendToBackEndHandler$(
-        root, args, context, WRITE_ROLES, 'mutation', 'Vehicle', 'GeneratorUpdateVehicle'
-      ).toPromise();
+      return sendToBackEndHandler$(root, args, context, WRITE_ROLES, 'mutation', 'Vehicle', 'GeneratorUpdateVehicle').toPromise();
     },
     GeneratorDeleteVehicles(root, args, context) {
-      return sendToBackEndHandler$(
-        root, args, context, WRITE_ROLES, 'mutation', 'Vehicle', 'GeneratorDeleteVehicles'
-      ).toPromise();
+      return sendToBackEndHandler$(root, args, context, WRITE_ROLES, 'mutation', 'Vehicle', 'GeneratorDeleteVehicles').toPromise();
     },
-
-    // === NUEVO: START como Mutation ===
     GeneratorStartGeneration(root, args, context) {
-      return sendToBackEndHandler$(
-        root, args, context, WRITE_ROLES, 'mutation', 'Vehicle', 'GeneratorStartGeneration', 5000
-      ).toPromise();
+      return sendToBackEndHandler$(root, args, context, WRITE_ROLES, 'mutation', 'Vehicle', 'GeneratorStartGeneration', 5000).toPromise();
     },
   },
 
-  //// SUBSCRIPTIONS ///////
   Subscription: {
+    // ya existía
     GeneratorVehicleModified: {
       subscribe: withFilter(
         (payload, variables, context) => {
-          // valida roles
           RoleValidator.checkAndThrowError(
             context.authToken.realm_access.roles,
             READ_ROLES,
@@ -135,38 +108,74 @@ module.exports = {
             : false;
         }
       )
-    }
+    },
+
+    // NUEVO: estado del generador
+    GeneratorStatus: {
+      subscribe: withFilter(
+        (payload, variables, context) => {
+          RoleValidator.checkAndThrowError(
+            context.authToken.realm_access.roles,
+            READ_ROLES,
+            "Generator",
+            "GeneratorStatus",
+            PERMISSION_DENIED_ERROR_CODE,
+            "Permission denied"
+          );
+          return pubsub.asyncIterator("GeneratorStatus");
+        },
+        () => true
+      )
+    },
+
+    // NUEVO: vehículo generado
+    GeneratorVehicleGenerated: {
+      subscribe: withFilter(
+        (payload, variables, context) => {
+          RoleValidator.checkAndThrowError(
+            context.authToken.realm_access.roles,
+            READ_ROLES,
+            "Generator",
+            "GeneratorVehicleGenerated",
+            PERMISSION_DENIED_ERROR_CODE,
+            "Permission denied"
+          );
+          return pubsub.asyncIterator("GeneratorVehicleGenerated");
+        },
+        () => true
+      )
+    },
   }
 };
 
-// ==== SUBSCRIPTIONS SOURCES ====
-
+// ==== Bridge de eventos backend -> GQL Subscriptions ====
 const eventDescriptors = [
   {
     backendEventName: "GeneratorVehicleModified",
     gqlSubscriptionName: "GeneratorVehicleModified",
-    dataExtractor: evt => evt.data,
-    onError: (error, descriptor) =>
-      console.log(`Error processing ${descriptor.backendEventName}`),
-    onEvent: (evt, descriptor) =>
-      console.log(`Event of type  ${descriptor.backendEventName} arrived`)
+    dataExtractor: evt => evt.data
+  },
+  // NUEVOS:
+  {
+    backendEventName: "GeneratorStatus",
+    gqlSubscriptionName: "GeneratorStatus",
+    dataExtractor: evt => evt.data
+  },
+  {
+    backendEventName: "GeneratorVehicleGenerated",
+    gqlSubscriptionName: "GeneratorVehicleGenerated",
+    dataExtractor: evt => evt.data
   }
 ];
 
 eventDescriptors.forEach(descriptor => {
   broker.getMaterializedViewsUpdates$([descriptor.backendEventName]).subscribe(
     evt => {
-      if (descriptor.onEvent) descriptor.onEvent(evt, descriptor);
       const payload = {};
-      payload[descriptor.gqlSubscriptionName] = descriptor.dataExtractor
-        ? descriptor.dataExtractor(evt)
-        : evt.data;
+      payload[descriptor.gqlSubscriptionName] = descriptor.dataExtractor ? descriptor.dataExtractor(evt) : evt.data;
       pubsub.publish(descriptor.gqlSubscriptionName, payload);
     },
-    error => {
-      if (descriptor.onError) descriptor.onError(error, descriptor);
-      console.error(`Error listening ${descriptor.gqlSubscriptionName}`, error);
-    },
+    error => console.error(`Error listening ${descriptor.gqlSubscriptionName}`, error),
     () => console.log(`${descriptor.gqlSubscriptionName} listener STOPED.`)
   );
 });
