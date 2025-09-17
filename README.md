@@ -3,33 +3,33 @@
 
 
 
-# MicroServiceTemplate
+# Generator
 The general porpouse of this service is to ...
 
 _This MicroService is built on top of NebulaE MicroService Framework.  Please see the [FrameWork project](https://github.com/NebulaEngineering/nebulae) to understand the full concept_**.
 
-![Intro](docs/images/ms-micro-service-template_intro.png "Intro")
+![Intro](docs/images/ms-generator_intro.png "Intro")
 # Table of Contents
   * [Project Structure](#structure)
   * [FrontEnd](#frontend)
     *  [Environment variables](#frontend_env_vars)
   * [API](#api)
-    * [GraphQL throught emi-gateway API](#api_emi-gateway_graphql)
+    * [GraphQL throught generator-ui-gateway API](#api_generator-ui-gateway_graphql)
   * [BackEnd](#backend)
-    *  [micro-service-template](#backend_micro-service-template)
-        * [Environment variables](#backend_micro-service-template_env_vars)
-        * [Event Sourcing](#backend_micro-service-template_eventsourcing)
-        * [CronJobs](#backend_micro-service-template_cronjobs)
+    *  [generator](#backend_generator)
+        * [Environment variables](#backend_generator_env_vars)
+        * [Event Sourcing](#backend_generator_eventsourcing)
+        * [CronJobs](#backend_generator_cronjobs)
   * [Development environment](#dev_env)
 # Project structure <a name="structure"></a>
 
 ```
 ├── frontend                            => Micro-FrontEnd  
-│   └── emi                      => Micro-FrontEnd for [emi FrontEnd](https://github.com/git_rep_directoryo_directory_path/emi)
+│   └── generator-ui                      => Micro-FrontEnd for [generator-ui FrontEnd](https://github.com/git_rep_directoryo_directory_path/generator-ui)
 ├── api                                 => Micro-APIs  
-│   └── emi-gateway                           => Micro-API for [emi-gateway API](https://github.com/nebulae-university/emi-gateway)  
+│   └── generator-ui-gateway                           => Micro-API for [generator-ui-gateway API](https://github.com/nebulae-university/generator-ui-gateway)  
 ├── backend                             => Micro-BackEnds  
-│   ├── micro-service-template                     => Micro-BackEnd responsible for ...
+│   ├── generator                     => Micro-BackEnd responsible for ...
 ├── etc                                 => Micro-Service config Files.  
 ├── deployment                          => Automatic deployment strategies  
 │   ├── compose                         => Docker-Compose environment for local development  
@@ -50,10 +50,10 @@ _This MicroService is built on top of NebulaE MicroService Framework.  Please se
 Exposed interfaces to send Commands and Queries by the CQRS principles.
 The MicroService exposes its interfaces as Micro-APIs that are nested on the general API.
 
-## GraphQL throught emi-gateway API <a name="api_emi-gateway_graphql"></a>
-These are the exposed GraphQL functions throught the [emi-gateway API](https://github.com/nebulae-university/emi-gateway).  
+## GraphQL throught generator-ui-gateway API <a name="api_generator-ui-gateway_graphql"></a>
+These are the exposed GraphQL functions throught the [generator-ui-gateway API](https://github.com/nebulae-university/generator-ui-gateway).  
 
-Note: You may find the GraphQL schema [here](api/emi-gateway/graphql/micro-service-template/schema.gql)
+Note: You may find the GraphQL schema [here](api/generator-ui-gateway/graphql/generator/schema.gql)
 
 ### GraphQL Enums
 
@@ -63,14 +63,14 @@ Note: You may find the GraphQL schema [here](api/emi-gateway/graphql/micro-servi
     * sn: String! => sample string
     
 ### GraphQL Queries
-#### getHelloWorldFrommicro-service-template
+#### getHelloWorldFromgenerator
 * Description : sample query, please remove
 * returns : HelloWorld object.
 
 
 ### GraphQL Subscriptions
 
-#### micro-service-templateHelloWorldSubscription
+#### generatorHelloWorldSubscription
 * Description: sample subscription, please remove
 * Data: HelloWorld object
 
@@ -87,11 +87,11 @@ Each BackEnd has the following running commands:
   * npm run sync-state:  syncs backend state by reading all missing Events from the event-store
   * npm test: runs unit tests
 
-## micro-service-template <a name="backend_micro-service-template"></a>
+## generator <a name="backend_generator"></a>
 ...
 
 
-### Environment variables <a name="backend_micro-service-template_env_vars"></a>
+### Environment variables <a name="backend_generator_env_vars"></a>
 
 
 ```
@@ -144,10 +144,10 @@ Each BackEnd has the following running commands:
 +------------------------------------------+--------+----------------------------------------------------------------------------------------------+-------+-----------+
 ```
 #### Notes: 
-  * ENV VARS for development are [here](backend/micro-service-template/.env)
-  * ENV VARS for production are [here](deployment/gke/deployment-micro-service-template.yaml)
+  * ENV VARS for development are [here](backend/generator/.env)
+  * ENV VARS for production are [here](deployment/gke/deployment-generator.yaml)
 
-### Event Sourcing <a name="backend_micro-service-template_eventsourcing"></a>
+### Event Sourcing <a name="backend_generator_eventsourcing"></a>
     Event sourcing events this Micro-BackEnd is subscribed to or is publishing.
 #### Subscribed events:    
 *   EventType: what for ...
@@ -155,7 +155,7 @@ Each BackEnd has the following running commands:
 #### Published events: 
 *   EventType: what for ...
 
-### CronJobs <a name="backend_micro-service-template_cronjobs"></a>
+### CronJobs <a name="backend_generator_cronjobs"></a>
 Time-based jobs that are configured and triggered by the [CronJob MicroService](https://github.com/nebulae-university/ms-cronjob)
 
 
@@ -176,7 +176,7 @@ Time-based jobs that are configured and triggered by the [CronJob MicroService](
 
 ![Development environment](docs/images/ms-devices-location-dev-env.png "Dev_environment")
 ### 1. clone this repo  
-   ```git clone https://github.com/nebulae-university/ms-micro-service-template.git```  
+   ```git clone https://github.com/nebulae-university/ms-generator.git```  
    
 ### 2. start databases, broker and security systems using docker-compose
 ```
@@ -215,12 +215,12 @@ Add the **developer** and **operator** rol to your user:
 
 ### 5. Compose FrontEnd
 ```
-nebulae compose-ui development --shell-type=FUSE2_ANGULAR --shell-repo=https://github.com/nebulae-university/emi --frontend-id=emi --output-dir=/FULL_PATH_TO_REPO/ms-micro-service-template/playground/emi  --setup-file=/FULL_PATH_TO_REPO/ms-micro-service-template/etc/mfe-setup.json
+nebulae compose-ui development --shell-type=FUSE2_ANGULAR --shell-repo=https://github.com/nebulae-university/generator-ui --frontend-id=generator-ui --output-dir=/FULL_PATH_TO_REPO/ms-generator/playground/generator-ui  --setup-file=/FULL_PATH_TO_REPO/ms-generator/etc/mfe-setup.json
 ```
 
-### 6. Compose the API emi-gateway
+### 6. Compose the API generator-ui-gateway
 ```
-nebulae compose-api development --api-type=NEBULAE_GATEWAY --api-repo=https://github.com/nebulae-university/emi-gateway --api-id=emi-gateway --output-dir=FULL_PATH_TO_REPO/ms-micro-service-template/playground/emi-gateway  --setup-file=FULL_PATH_TO_REPO/ms-micro-service-template/etc/mapi-setup.json
+nebulae compose-api development --api-type=NEBULAE_GATEWAY --api-repo=https://github.com/nebulae-university/generator-ui-gateway --api-id=generator-ui-gateway --output-dir=FULL_PATH_TO_REPO/ms-generator/playground/generator-ui-gateway  --setup-file=FULL_PATH_TO_REPO/ms-generator/etc/mapi-setup.json
 ```
 
 ### 7. Set the JWT token 
@@ -228,13 +228,13 @@ nebulae compose-api development --api-type=NEBULAE_GATEWAY --api-repo=https://gi
 * select the DEV_nebulae keycloak realm and click on 'realm settings' in left panel
 * select keys option tab
 * click on 'public key' from the RSA key and copy the contents.
-* set this key value to the **JWT_PUBLIC_KEY** atribute in the following files: *WORKING_FOLDER*/ms-micro-service-template/backend/micro-service-template/.env   *WORKING_FOLDER*/ms-micro-service-template/playground/emi-gateway/.env  
+* set this key value to the **JWT_PUBLIC_KEY** atribute in the following files: *WORKING_FOLDER*/ms-generator/backend/generator/.env   *WORKING_FOLDER*/ms-generator/playground/generator-ui-gateway/.env  
 Note: use the following format: ```JWT_PUBLIC_KEY=-----BEGIN PUBLIC KEY-----\nPUT_HERE_JWT_PUBLIC_KEY_VALUE\n-----END PUBLIC KEY-----```
 * Setup the Apollo engine key to trace API requests
-    * create a key at https://engine.apollographql.com/ and set it to the **APOLLO_ENGINE_API_KEY** atribute in the playground/emi-gateway/.env file
+    * create a key at https://engine.apollographql.com/ and set it to the **APOLLO_ENGINE_API_KEY** atribute in the playground/generator-ui-gateway/.env file
 
 ### 8. Remove FrontEnd base href used on production
-change ```<base href="/emi/">``` to ```<base href="/">``` in the index.html located at playground/emi/src/index.html
+change ```<base href="/generator-ui/">``` to ```<base href="/">``` in the index.html located at playground/generator-ui/src/index.html
 
 
 ## Start the development environment
@@ -245,18 +245,18 @@ docker-compose up
 ```
 1. Start the Micro-BackEnd
 ```
-cd backend/micro-service-template/
+cd backend/generator/
 npm install
 npm start
 ```
-3. Start the API emi-gateway
+3. Start the API generator-ui-gateway
 ```
-cd playground/emi-gateway
+cd playground/generator-ui-gateway
 npm run start-dev-env
 ```
 4. Start the FrontEnd
 ```
-cd playground/emi
+cd playground/generator-ui
 npm run start-dev-env
 ```
 

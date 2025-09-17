@@ -1,8 +1,8 @@
 [
     {
-        "name": "micro-service-template-crud-aggregate",
+        "name": "generator-vehicle-management",
         "type": "graphql",        
-        "src": "api/emi-gateway/graphql/micro-service-template-crud-aggregate",
+        "src": "api/generator-ui-gateway/graphql/generator-vehicle-management",
         "preBuildCommands": []
     }
 ]

@@ -779,7 +779,7 @@
       },
       {
         "id": "f7f49df1-de5c-44af-9269-9815643c4970",
-        "name": "CRUD_AGGREGATE_READ",
+        "name": "VEHICLE_READ",
         "composite": false,
         "clientRole": false,
         "containerId": "FLEET_DEVICES",
@@ -1660,7 +1660,7 @@
       },
       {
         "id": "b255b70a-39b6-404b-8923-812a9b33e88a",
-        "name": "CRUD_AGGREGATE_WRITE",
+        "name": "VEHICLE_WRITE",
         "composite": false,
         "clientRole": false,
         "containerId": "FLEET_DEVICES",
@@ -2020,7 +2020,7 @@
       }
     ],
     "client": {
-      "emi": [],
+      "generator-ui": [],
       "realm-management": [
         {
           "id": "a95be0d9-fa55-4b1e-8bd5-ed7d823ec744",
@@ -4422,7 +4422,7 @@
         "http://192.168.186.102:4000/*",
         "http://192.168.188.147:4000/*",
         "http://localhost/*",
-        "https://universitynebulae.com.co/emi/*",
+        "https://universitynebulae.com.co/generator-ui/*",
         "http://localhost:5000/*",
         "http://localhost:4100/*",
         "http://127.0.0.1:4000/*",
@@ -4660,7 +4660,7 @@
         "http://192.168.186.106:4000/*",
         "http://192.168.188.69:4000/*",
         "http://192.168.188.147:4000/*",
-        "https://universitynebulae.com.co/emi/*"
+        "https://universitynebulae.com.co/generator-ui/*"
       ],
       "webOrigins": [
         "http://192.168.186.106:4000",
@@ -5008,16 +5008,16 @@
     },
     {
       "id": "cf681cc4-467d-4090-92f6-232b04509e6d",
-      "clientId": "emi",
+      "clientId": "generator-ui",
       "rootUrl": "https://universitynebulae.com.co/EMI",
-      "adminUrl": "https://universitynebulae.com.co/emi/",
+      "adminUrl": "https://universitynebulae.com.co/generator-ui/",
       "surrogateAuthRequired": false,
       "enabled": true,
       "clientAuthenticatorType": "client-secret",
       "secret": "**********",
       "redirectUris": [
         "http://localhost:8080/*",
-        "https://universitynebulae.com.co/emi/*"
+        "https://universitynebulae.com.co/generator-ui/*"
       ],
       "webOrigins": [
         "http://localhost:8080",
