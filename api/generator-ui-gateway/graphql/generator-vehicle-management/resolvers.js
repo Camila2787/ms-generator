@@ -176,10 +176,8 @@ module.exports = {
     // NUEVO: broadcast del estado (sin filtro)
     GeneratorStatus: {
       subscribe: (root, args, context) => {
-        // Validación de autenticación más permisiva para desarrollo
-        if (!context.authToken) {
-          console.warn('GeneratorStatus subscription: No auth token provided');
-        }
+        // Sin validación de autenticación para desarrollo
+        console.log('GeneratorStatus subscription: Starting without auth validation');
         return pubsub.asyncIterator("GeneratorStatus");
       }
     },
@@ -187,10 +185,8 @@ module.exports = {
     // NUEVO: broadcast de cada vehículo generado (sin filtro)
     GeneratorVehicleGenerated: {
       subscribe: (root, args, context) => {
-        // Validación de autenticación más permisiva para desarrollo
-        if (!context.authToken) {
-          console.warn('GeneratorVehicleGenerated subscription: No auth token provided');
-        }
+        // Sin validación de autenticación para desarrollo
+        console.log('GeneratorVehicleGenerated subscription: Starting without auth validation');
         return pubsub.asyncIterator("GeneratorVehicleGenerated");
       }
     }
