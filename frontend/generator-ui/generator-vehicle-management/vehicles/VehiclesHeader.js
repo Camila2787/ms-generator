@@ -20,7 +20,6 @@ import {
   GET_GENERATION_STATUS_GQL,
   ON_GENERATOR_STATUS
 } from '../gql/Vehicle';
-import { debugWebSocket, debugGenerator, checkWebSocketConnection } from '../utils/debug';
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -109,23 +108,11 @@ export default function VehiclesHeader() {
     );
   }, [statusData, subStatusData]);
 
-  // Debug: mostrar errores de suscripción
-  React.useEffect(() => {
-    if (subError) {
-      debugWebSocket.logSubscriptionError('GeneratorStatus', subError);
-    }
-  }, [subError]);
-
-  // Debug: verificar conectividad WebSocket
-  React.useEffect(() => {
-    checkWebSocketConnection(client);
-  }, [client]);
 
   const start = async () => {
     try {
       setWorking(true);
-      const result = await client.mutate({ mutation: START_GENERATION_GQL });
-      debugWebSocket.logMutationResult('GeneratorStartGeneration', result);
+      await client.mutate({ mutation: START_GENERATION_GQL });
       // Forzar refresh del estado después de iniciar
       setTimeout(() => {
         refetchStatus();
@@ -140,11 +127,10 @@ export default function VehiclesHeader() {
   const stop = async () => {
     try {
       setWorking(true);
-      const result = await client.query({
+      await client.query({
         query: STOP_GENERATION_GQL,
         fetchPolicy: 'no-cache',
       });
-      debugWebSocket.logQueryResult('GeneratorStopGeneration', result);
       // Forzar refresh del estado después de detener
       setTimeout(() => {
         refetchStatus();
