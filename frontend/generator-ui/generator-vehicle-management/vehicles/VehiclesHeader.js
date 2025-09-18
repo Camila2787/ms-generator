@@ -148,53 +148,67 @@ export default function VehiclesHeader() {
   }, [client]);
 
   return (
-    <div className={classes.container}>
-      <Grid container alignItems="center" spacing={2}>
+    <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 rounded-xl shadow-lg p-6 mb-6">
+      <Grid container alignItems="center" spacing={3}>
         <Grid item xs={12} sm>
-          <Typography variant="h5" className={classes.title}>
-            GENERADOR DE FLOTA VEHICULAR
-          </Typography>
+          <div className="flex items-center">
+            <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center mr-4">
+              <DirectionsCarIcon className="text-white text-2xl" />
+            </div>
+            <div>
+              <Typography variant="h4" className="text-white font-bold mb-1">
+                GENERADOR DE FLOTA VEHICULAR
+              </Typography>
+              <Typography variant="body2" className="text-blue-100">
+                Sistema de simulación en tiempo real
+              </Typography>
+            </div>
+          </div>
         </Grid>
 
         <Grid item>
-          <Box className={classes.right}>
-            <Tooltip title={status.isGenerating ? 'Corriendo' : 'Detenido'}>
-              <Chip
-                size="small"
-                label={status.isGenerating ? 'Estado: Corriendo' : 'Estado: Detenido'}
-                className={status.isGenerating ? classes.chipOk : classes.chipWarn}
-              />
-            </Tooltip>
+          <Box className="flex items-center space-x-4">
+            {/* Estado del generador */}
+            <div className="flex items-center space-x-2 bg-white bg-opacity-10 rounded-lg px-4 py-2">
+              <div className={`w-3 h-3 rounded-full ${status.isGenerating ? 'bg-green-400 animate-pulse' : 'bg-gray-400'}`}></div>
+              <span className="text-white font-medium">
+                {status.isGenerating ? 'Generando' : 'Detenido'}
+              </span>
+            </div>
 
-            <Chip
-              size="small"
-              icon={<DirectionsCarIcon style={{ color: 'inherit' }} />}
-              label={`Vehículos: ${Number(status.generatedCount || 0).toLocaleString()}`}
-              className={classes.chipCount}
-              color="default"
-            />
+            {/* Contador de vehículos */}
+            <div className="bg-white bg-opacity-10 rounded-lg px-4 py-2">
+              <div className="flex items-center space-x-2">
+                <DirectionsCarIcon className="text-white text-lg" />
+                <span className="text-white font-bold text-lg">
+                  {Number(status.generatedCount || 0).toLocaleString()}
+                </span>
+                <span className="text-blue-100 text-sm">vehículos</span>
+              </div>
+            </div>
 
-            <Box ml={1} />
+            {/* Botones de control */}
+            <div className="flex space-x-3">
+              <Button
+                onClick={start}
+                className="bg-green-500 hover:bg-green-600 text-white font-semibold px-6 py-2 rounded-lg shadow-md transition-all duration-200 transform hover:scale-105"
+                startIcon={working ? <CircularProgress size={18} color="inherit" /> : <PlayArrowIcon />}
+                disabled={working || status.isGenerating}
+                variant="contained"
+              >
+                Iniciar Simulación
+              </Button>
 
-            <Button
-              onClick={start}
-              className={classes.btnStart}
-              variant="contained"
-              startIcon={working ? <CircularProgress size={18} /> : <PlayArrowIcon />}
-              disabled={working || status.isGenerating}
-            >
-              Iniciar Simulación
-            </Button>
-
-            <Button
-              onClick={stop}
-              className={classes.btnStop}
-              variant="contained"
-              startIcon={working ? <CircularProgress size={18} /> : <StopIcon />}
-              disabled={working || !status.isGenerating}
-            >
-              Detener Simulación
-            </Button>
+              <Button
+                onClick={stop}
+                className="bg-red-500 hover:bg-red-600 text-white font-semibold px-6 py-2 rounded-lg shadow-md transition-all duration-200 transform hover:scale-105"
+                startIcon={working ? <CircularProgress size={18} color="inherit" /> : <StopIcon />}
+                disabled={working || !status.isGenerating}
+                variant="contained"
+              >
+                Detener Simulación
+              </Button>
+            </div>
           </Box>
         </Grid>
       </Grid>
