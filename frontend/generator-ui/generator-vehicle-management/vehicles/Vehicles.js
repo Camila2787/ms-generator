@@ -10,6 +10,7 @@ import {FuseLoading} from '@fuse';
 
 import VehiclesFilterHeader from './VehiclesFilterHeader';
 import VehiclesFilterContent from './VehiclesFilterContent';
+import DiagnosticPanel from '../components/DiagnosticPanel';
 
 function Vehicles()
 {
@@ -32,6 +33,9 @@ function Vehicles()
             }
             content={
                 <div className="w-full">
+                    {/* Panel de diagnóstico */}
+                    <DiagnosticPanel />
+
                     {/* Lista en vivo virtualizada */}
                     <LiveGeneratedList />
 

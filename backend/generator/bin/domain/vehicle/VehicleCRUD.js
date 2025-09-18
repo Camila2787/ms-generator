@@ -148,7 +148,10 @@ class VehicleCRUD {
       isGenerating: true,
       generatedCount,
       status: 'RUNNING'
-    }).subscribe();
+    }).subscribe({
+      next: () => ConsoleLogger.i(`[Generator] Status RUNNING published to MV`),
+      error: err => ConsoleLogger.e(`[Generator] Error publishing status: ${err && err.message}`)
+    });
 
     interval(50).pipe(takeUntil(stop$)).subscribe({
       next: () => {
@@ -171,7 +174,9 @@ class VehicleCRUD {
         broker.send$(MQTT_TOPIC_GENERATED, 'VehicleGenerated', msg).subscribe();
 
         // >>> publica evento a MV para WS <<<
-        broker.send$(MATERIALIZED_VIEW_TOPIC, 'GeneratorVehicleGenerated', msg).subscribe();
+        broker.send$(MATERIALIZED_VIEW_TOPIC, 'GeneratorVehicleGenerated', msg).subscribe({
+          error: err => ConsoleLogger.e(`[Generator] Error publishing vehicle event: ${err && err.message}`)
+        });
 
         generatedCount++;
       },
@@ -203,7 +208,10 @@ class VehicleCRUD {
       isGenerating: false,
       generatedCount,
       status: 'STOPPED'
-    }).subscribe();
+    }).subscribe({
+      next: () => ConsoleLogger.i(`[Generator] Status STOPPED published to MV`),
+      error: err => ConsoleLogger.e(`[Generator] Error publishing status: ${err && err.message}`)
+    });
 
     return CqrsResponseHelper.buildSuccessResponse$({ code: 200, message: `Generator stopped. total=${generatedCount}` });
   }

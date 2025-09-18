@@ -176,11 +176,10 @@ module.exports = {
     // NUEVO: broadcast del estado (sin filtro)
     GeneratorStatus: {
       subscribe: (root, args, context) => {
-        // Si quieres exigir rol, descomenta:
-        // RoleValidator.checkAndThrowError(
-        //   context.authToken.realm_access.roles, READ_ROLES,
-        //   "Generator", "GeneratorStatus", PERMISSION_DENIED_ERROR_CODE, "Permission denied"
-        // );
+        // Validación de autenticación más permisiva para desarrollo
+        if (!context.authToken) {
+          console.warn('GeneratorStatus subscription: No auth token provided');
+        }
         return pubsub.asyncIterator("GeneratorStatus");
       }
     },
@@ -188,11 +187,10 @@ module.exports = {
     // NUEVO: broadcast de cada vehículo generado (sin filtro)
     GeneratorVehicleGenerated: {
       subscribe: (root, args, context) => {
-        // Si quieres exigir rol, descomenta:
-        // RoleValidator.checkAndThrowError(
-        //   context.authToken.realm_access.roles, READ_ROLES,
-        //   "Generator", "GeneratorVehicleGenerated", PERMISSION_DENIED_ERROR_CODE, "Permission denied"
-        // );
+        // Validación de autenticación más permisiva para desarrollo
+        if (!context.authToken) {
+          console.warn('GeneratorVehicleGenerated subscription: No auth token provided');
+        }
         return pubsub.asyncIterator("GeneratorVehicleGenerated");
       }
     }

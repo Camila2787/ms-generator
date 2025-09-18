@@ -5,6 +5,7 @@ import {
   ON_GENERATOR_STATUS,
   GET_GENERATION_STATUS_GQL
 } from '../gql/Vehicle';
+import { debugWebSocket, debugGenerator } from '../utils/debug';
 
 const MAX_ITEMS = 1000;
 
@@ -22,6 +23,7 @@ function LiveGeneratedList() {
   // Estado inicial (query)
   useQuery(GET_GENERATION_STATUS_GQL, {
     fetchPolicy: 'network-only',
+    errorPolicy: 'ignore',
     onCompleted(data) {
       if (data && data.GeneratorGenerationStatus) {
         setStatus(data.GeneratorGenerationStatus);
@@ -31,18 +33,27 @@ function LiveGeneratedList() {
 
   // Estado por WS
   useSubscription(ON_GENERATOR_STATUS, {
+    errorPolicy: 'ignore',
     onSubscriptionData({ subscriptionData }) {
       const s = subscriptionData && subscriptionData.data && subscriptionData.data.GeneratorStatus;
-      if (s) setStatus(s);
+      if (s) {
+        debugWebSocket.logSubscriptionData('GeneratorStatus', s);
+        setStatus(s);
+      }
+    },
+    onError(error) {
+      debugWebSocket.logSubscriptionError('GeneratorStatus', error);
     }
   });
 
   // Vehículos generados por WS (throttle ~1s)
   useSubscription(ON_GENERATOR_VEHICLE_GENERATED, {
+    errorPolicy: 'ignore',
     onSubscriptionData({ subscriptionData }) {
       const evt = subscriptionData && subscriptionData.data && subscriptionData.data.GeneratorVehicleGenerated;
       if (!evt) return;
 
+      debugGenerator.logVehicleGenerated(evt);
       bufferRef.current.push(evt);
       if (bufferRef.current.length > MAX_ITEMS) {
         bufferRef.current.splice(0, bufferRef.current.length - MAX_ITEMS);
@@ -54,6 +65,9 @@ function LiveGeneratedList() {
         // mostramos últimos primero
         setRows(bufferRef.current.slice().reverse());
       }
+    },
+    onError(error) {
+      debugWebSocket.logSubscriptionError('GeneratorVehicleGenerated', error);
     }
   });
 

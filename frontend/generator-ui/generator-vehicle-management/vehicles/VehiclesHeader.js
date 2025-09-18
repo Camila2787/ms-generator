@@ -20,6 +20,7 @@ import {
   GET_GENERATION_STATUS_GQL,
   ON_GENERATOR_STATUS
 } from '../gql/Vehicle';
+import { debugWebSocket, debugGenerator, checkWebSocketConnection } from '../utils/debug';
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -85,12 +86,15 @@ export default function VehiclesHeader() {
   const [working, setWorking] = useState(false);
 
   // Estado inicial
-  const { data: statusData } = useQuery(GET_GENERATION_STATUS_GQL, {
+  const { data: statusData, refetch: refetchStatus } = useQuery(GET_GENERATION_STATUS_GQL, {
     fetchPolicy: 'network-only',
+    errorPolicy: 'ignore',
   });
 
   // Actualización en vivo del estado
-  const { data: subStatusData } = useSubscription(ON_GENERATOR_STATUS);
+  const { data: subStatusData, error: subError } = useSubscription(ON_GENERATOR_STATUS, {
+    errorPolicy: 'ignore',
+  });
 
   const status = useMemo(() => {
     const s =
@@ -105,11 +109,29 @@ export default function VehiclesHeader() {
     );
   }, [statusData, subStatusData]);
 
+  // Debug: mostrar errores de suscripción
+  React.useEffect(() => {
+    if (subError) {
+      debugWebSocket.logSubscriptionError('GeneratorStatus', subError);
+    }
+  }, [subError]);
+
+  // Debug: verificar conectividad WebSocket
+  React.useEffect(() => {
+    checkWebSocketConnection(client);
+  }, [client]);
+
   const start = async () => {
     try {
       setWorking(true);
-      await client.mutate({ mutation: START_GENERATION_GQL });
-      // nada más: el chip se actualiza por la subscription
+      const result = await client.mutate({ mutation: START_GENERATION_GQL });
+      debugWebSocket.logMutationResult('GeneratorStartGeneration', result);
+      // Forzar refresh del estado después de iniciar
+      setTimeout(() => {
+        refetchStatus();
+      }, 100);
+    } catch (error) {
+      console.error('Error starting generation:', error);
     } finally {
       setWorking(false);
     }
@@ -118,10 +140,17 @@ export default function VehiclesHeader() {
   const stop = async () => {
     try {
       setWorking(true);
-      await client.query({
+      const result = await client.query({
         query: STOP_GENERATION_GQL,
         fetchPolicy: 'no-cache',
       });
+      debugWebSocket.logQueryResult('GeneratorStopGeneration', result);
+      // Forzar refresh del estado después de detener
+      setTimeout(() => {
+        refetchStatus();
+      }, 100);
+    } catch (error) {
+      console.error('Error stopping generation:', error);
     } finally {
       setWorking(false);
     }
