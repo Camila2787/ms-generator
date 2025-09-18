@@ -6,6 +6,7 @@ import {
   GET_GENERATION_STATUS_GQL
 } from '../gql/Vehicle';
 import { debugWebSocket, debugGenerator } from '../utils/debug';
+import VehicleListDebug from '../components/VehicleListDebug';
 
 const MAX_ITEMS = 1000;
 
@@ -73,45 +74,79 @@ function LiveGeneratedList() {
     }
   });
 
-  // Fallback: Si WebSocket falla, usar polling cada 2 segundos
+  // Estado para controlar si WebSocket falló
+  const [websocketFailed, setWebsocketFailed] = React.useState(false);
+
+  // Detectar fallo de WebSocket
   React.useEffect(() => {
     if (subError || subVehicleError) {
       console.log('WebSocket failed, starting polling fallback');
+      setWebsocketFailed(true);
+    }
+  }, [subError, subVehicleError]);
+
+  // Fallback: Si WebSocket falla, usar polling cada 1 segundo
+  React.useEffect(() => {
+    if (websocketFailed && status.isGenerating) {
+      console.log('Starting fallback polling for vehicle generation');
       const interval = setInterval(() => {
         // Simular datos de vehículos generados para testing
-        if (status.isGenerating) {
-          const mockVehicle = {
-            aid: `mock_${Date.now()}`,
-            timestamp: new Date().toISOString(),
-            data: {
-              type: ['SUV', 'PickUp', 'Sedan'][Math.floor(Math.random() * 3)],
-              powerSource: ['Electric', 'Hybrid', 'Gas'][Math.floor(Math.random() * 3)],
-              hp: Math.floor(Math.random() * 225) + 75,
-              year: Math.floor(Math.random() * 45) + 1980,
-              topSpeed: Math.floor(Math.random() * 200) + 120
-            }
-          };
-          
-          bufferRef.current.push(mockVehicle);
-          if (bufferRef.current.length > MAX_ITEMS) {
-            bufferRef.current.splice(0, bufferRef.current.length - MAX_ITEMS);
+        const mockVehicle = {
+          aid: `mock_${Date.now()}_${Math.random()}`,
+          timestamp: new Date().toISOString(),
+          data: {
+            type: ['SUV', 'PickUp', 'Sedan'][Math.floor(Math.random() * 3)],
+            powerSource: ['Electric', 'Hybrid', 'Gas'][Math.floor(Math.random() * 3)],
+            hp: Math.floor(Math.random() * 225) + 75,
+            year: Math.floor(Math.random() * 45) + 1980,
+            topSpeed: Math.floor(Math.random() * 200) + 120
           }
-          
-          setRows(bufferRef.current.slice().reverse());
+        };
+        
+        console.log('Adding mock vehicle:', mockVehicle);
+        bufferRef.current.push(mockVehicle);
+        if (bufferRef.current.length > MAX_ITEMS) {
+          bufferRef.current.splice(0, bufferRef.current.length - MAX_ITEMS);
         }
-      }, 2000);
+        
+        // Actualizar la lista inmediatamente
+        setRows(bufferRef.current.slice().reverse());
+      }, 1000); // Cada 1 segundo para simular la frecuencia real
       
-      return () => clearInterval(interval);
+      return () => {
+        console.log('Clearing fallback polling interval');
+        clearInterval(interval);
+      };
     }
-  }, [subError, subVehicleError, status.isGenerating]);
+  }, [websocketFailed, status.isGenerating]);
+
+  // Limpiar la lista cuando se detiene la generación
+  React.useEffect(() => {
+    if (!status.isGenerating) {
+      setWebsocketFailed(false);
+    }
+  }, [status.isGenerating]);
 
   return (
     <div className="mb-16">
+      {/* Componente de debug */}
+      <VehicleListDebug 
+        rows={rows} 
+        status={status} 
+        websocketFailed={websocketFailed} 
+        bufferRef={bufferRef} 
+      />
+      
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-16 font-700">Vehículos Generados en Tiempo Real</h2>
         <div className="text-14">
           Estado: {status.isGenerating ? 'Corriendo...' : 'Detenido'}&nbsp;|&nbsp;
           Vehículos Generados: {status.generatedCount}
+          {websocketFailed && (
+            <span className="ml-2 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded">
+              Modo Fallback
+            </span>
+          )}
         </div>
       </div>
 
@@ -136,7 +171,18 @@ function LiveGeneratedList() {
 
         {rows.length === 0 && (
           <div className="px-12 py-12 text-12 text-hint">
-            No hay datos aún. Pulsa “Iniciar Simulación”.
+            {status.isGenerating ? (
+              websocketFailed ? (
+                <div>
+                  <div>Generando vehículos en modo fallback...</div>
+                  <div className="text-10 mt-2">WebSocket no disponible, usando datos simulados</div>
+                </div>
+              ) : (
+                "Generando vehículos..."
+              )
+            ) : (
+              "No hay datos aún. Pulsa 'Iniciar Simulación'."
+            )}
           </div>
         )}
       </div>
