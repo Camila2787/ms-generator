@@ -34,6 +34,7 @@ const DiagnosticPanel = () => {
       apolloClient: !!client,
       websocketClient: false,
       websocketStatus: 'unknown',
+      websocketUrl: 'unknown',
       lastCheck: new Date().toISOString()
     };
 
@@ -42,6 +43,7 @@ const DiagnosticPanel = () => {
       if (wsClient) {
         newDiagnostics.websocketClient = true;
         newDiagnostics.websocketStatus = wsClient.status || 'unknown';
+        newDiagnostics.websocketUrl = wsClient.url || 'unknown';
       }
     }
 
@@ -148,6 +150,16 @@ const DiagnosticPanel = () => {
                 color={getStatusColor(diagnostics.websocketStatus)}
                 size="small"
               />
+            </ListItem>
+
+            <ListItem>
+              <ListItemText
+                primary="URL WebSocket"
+                secondary="Endpoint de conexión WebSocket"
+              />
+              <Typography variant="caption" style={{ wordBreak: 'break-all' }}>
+                {diagnostics.websocketUrl}
+              </Typography>
             </ListItem>
 
             <ListItem>

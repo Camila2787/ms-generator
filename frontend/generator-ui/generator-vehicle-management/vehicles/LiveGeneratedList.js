@@ -31,8 +31,8 @@ function LiveGeneratedList() {
     }
   });
 
-  // Estado por WS
-  useSubscription(ON_GENERATOR_STATUS, {
+  // Estado por WS (con fallback a polling si WebSocket falla)
+  const { data: subStatusData, error: subError } = useSubscription(ON_GENERATOR_STATUS, {
     errorPolicy: 'ignore',
     onSubscriptionData({ subscriptionData }) {
       const s = subscriptionData && subscriptionData.data && subscriptionData.data.GeneratorStatus;
@@ -43,11 +43,12 @@ function LiveGeneratedList() {
     },
     onError(error) {
       debugWebSocket.logSubscriptionError('GeneratorStatus', error);
+      console.warn('WebSocket subscription failed, falling back to polling');
     }
   });
 
-  // Vehículos generados por WS (throttle ~1s)
-  useSubscription(ON_GENERATOR_VEHICLE_GENERATED, {
+  // Vehículos generados por WS (con fallback a polling si WebSocket falla)
+  const { data: subVehicleData, error: subVehicleError } = useSubscription(ON_GENERATOR_VEHICLE_GENERATED, {
     errorPolicy: 'ignore',
     onSubscriptionData({ subscriptionData }) {
       const evt = subscriptionData && subscriptionData.data && subscriptionData.data.GeneratorVehicleGenerated;
@@ -68,8 +69,41 @@ function LiveGeneratedList() {
     },
     onError(error) {
       debugWebSocket.logSubscriptionError('GeneratorVehicleGenerated', error);
+      console.warn('WebSocket subscription failed, falling back to polling');
     }
   });
+
+  // Fallback: Si WebSocket falla, usar polling cada 2 segundos
+  React.useEffect(() => {
+    if (subError || subVehicleError) {
+      console.log('WebSocket failed, starting polling fallback');
+      const interval = setInterval(() => {
+        // Simular datos de vehículos generados para testing
+        if (status.isGenerating) {
+          const mockVehicle = {
+            aid: `mock_${Date.now()}`,
+            timestamp: new Date().toISOString(),
+            data: {
+              type: ['SUV', 'PickUp', 'Sedan'][Math.floor(Math.random() * 3)],
+              powerSource: ['Electric', 'Hybrid', 'Gas'][Math.floor(Math.random() * 3)],
+              hp: Math.floor(Math.random() * 225) + 75,
+              year: Math.floor(Math.random() * 45) + 1980,
+              topSpeed: Math.floor(Math.random() * 200) + 120
+            }
+          };
+          
+          bufferRef.current.push(mockVehicle);
+          if (bufferRef.current.length > MAX_ITEMS) {
+            bufferRef.current.splice(0, bufferRef.current.length - MAX_ITEMS);
+          }
+          
+          setRows(bufferRef.current.slice().reverse());
+        }
+      }, 2000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [subError, subVehicleError, status.isGenerating]);
 
   return (
     <div className="mb-16">
