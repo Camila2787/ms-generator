@@ -7,6 +7,7 @@ import {
 } from '../gql/Vehicle';
 import { debugWebSocket, debugGenerator } from '../utils/debug';
 import VehicleListDebug from '../components/VehicleListDebug';
+import SimpleVehicleList from '../components/SimpleVehicleList';
 
 const MAX_ITEMS = 1000;
 
@@ -109,8 +110,13 @@ function LiveGeneratedList() {
           bufferRef.current.splice(0, bufferRef.current.length - MAX_ITEMS);
         }
         
+        const newRows = bufferRef.current.slice().reverse();
+        console.log('Buffer length:', bufferRef.current.length);
+        console.log('New rows length:', newRows.length);
+        console.log('Setting rows to:', newRows);
+        
         // Actualizar la lista inmediatamente
-        setRows(bufferRef.current.slice().reverse());
+        setRows(newRows);
       }, 1000); // Cada 1 segundo para simular la frecuencia real
       
       return () => {
@@ -127,8 +133,19 @@ function LiveGeneratedList() {
     }
   }, [status.isGenerating]);
 
+  // Debug: Monitorear cambios en rows
+  React.useEffect(() => {
+    console.log('Rows state changed:', rows.length, 'items');
+    if (rows.length > 0) {
+      console.log('First row:', rows[0]);
+    }
+  }, [rows]);
+
   return (
     <div className="mb-16">
+      {/* Lista simple para comparar */}
+      <SimpleVehicleList isGenerating={status.isGenerating} />
+      
       {/* Componente de debug */}
       <VehicleListDebug 
         rows={rows} 
@@ -150,6 +167,13 @@ function LiveGeneratedList() {
         </div>
       </div>
 
+      {/* Debug info */}
+      <div className="mb-4 p-2 bg-gray-100 text-sm">
+        <strong>Debug:</strong> Rows: {rows.length} | Buffer: {bufferRef.current.length} | 
+        WebSocket Failed: {websocketFailed ? 'Yes' : 'No'} | 
+        Generating: {status.isGenerating ? 'Yes' : 'No'}
+      </div>
+
       <div className="w-full border rounded overflow-auto" style={{ maxHeight: 300 }}>
         <div className="grid grid-cols-5 px-12 py-8 font-700 border-b">
           <div>Año</div>
@@ -159,15 +183,18 @@ function LiveGeneratedList() {
           <div>Power Source</div>
         </div>
 
-        {rows.map((r, idx) => (
-          <div key={(r.aid || idx) + ':' + idx} className="grid grid-cols-5 px-12 py-6 border-b">
-            <div>{r.data && r.data.year}</div>
-            <div>{r.data && r.data.type}</div>
-            <div>{r.data && r.data.hp}</div>
-            <div>{r.data && r.data.topSpeed}</div>
-            <div>{r.data && r.data.powerSource}</div>
-          </div>
-        ))}
+        {rows.map((r, idx) => {
+          console.log('Rendering row:', idx, r);
+          return (
+            <div key={(r.aid || idx) + ':' + idx} className="grid grid-cols-5 px-12 py-6 border-b">
+              <div>{r.data && r.data.year}</div>
+              <div>{r.data && r.data.type}</div>
+              <div>{r.data && r.data.hp}</div>
+              <div>{r.data && r.data.topSpeed}</div>
+              <div>{r.data && r.data.powerSource}</div>
+            </div>
+          );
+        })}
 
         {rows.length === 0 && (
           <div className="px-12 py-12 text-12 text-hint">
