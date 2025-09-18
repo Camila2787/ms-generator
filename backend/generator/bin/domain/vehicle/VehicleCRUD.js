@@ -19,7 +19,7 @@ const WRITE_ROLES = ["VEHICLE_WRITE"];
 const REQUIRED_ATTRIBUTES = [];
 
 // Tópico MV (usado por el gateway para empujar vía WS)
-const MATERIALIZED_VIEW_TOPIC = "generator-ui-gateway-materialized-view-updates";
+const MATERIALIZED_VIEW_TOPIC = "emi-gateway-materialized-view-updates";
 
 // Tópico MQTT de la consigna
 const MQTT_TOPIC_GENERATED = process.env.MQTT_TOPIC_GENERATED || "fleet/vehicles/generated";
