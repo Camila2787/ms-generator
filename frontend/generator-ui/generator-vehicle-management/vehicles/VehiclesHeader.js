@@ -28,8 +28,10 @@ const useStyles = makeStyles((theme) => ({
     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     color: 'white',
     borderRadius: 16,
-    marginBottom: 24,
+    marginBottom: 48,
     boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+    position: 'relative',
+    zIndex: 1,
   },
   title: {
     fontWeight: 700,

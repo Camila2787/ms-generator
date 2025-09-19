@@ -261,13 +261,15 @@ function LiveGeneratedList() {
   }, [rows]);
 
   return (
-    <Box style={{ marginTop: 32, marginBottom: 32 }}>
+    <Box style={{ marginTop: 0, marginBottom: 32 }}>
       {/* Header de la sección */}
       <Card style={{ 
         borderRadius: 16, 
-        marginBottom: 32, 
+        marginBottom: 24, 
         background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
+        boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+        position: 'relative',
+        zIndex: 0
       }}>
         <CardContent style={{ padding: 24 }}>
           <Grid container alignItems="center" spacing={3}>
