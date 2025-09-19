@@ -146,10 +146,19 @@ export default function VehiclesHeader() {
     <div className="flex flex-col h-full p-32 pt-48 overflow-visible">
       {/* Primera fila: Título y estado */}
       <div className="flex items-center justify-between mb-24">
-        <div className="flex items-center">
+        <div className="flex items-center" style={{ position: 'relative', zIndex: 10 }}>
           <DirectionsCarIcon style={{ fontSize: 32, color: '#1976d2', marginRight: 16 }} />
-          <div>
-            <Typography variant="h5" className={classes.title}>
+          <div style={{ position: 'relative', zIndex: 10 }}>
+            <Typography 
+              variant="h5" 
+              style={{ 
+                fontWeight: 600, 
+                color: '#333',
+                position: 'relative',
+                zIndex: 10,
+                lineHeight: 1.2
+              }}
+            >
               Generador de Vehículos
             </Typography>
             <Typography variant="body2" className={classes.subtitle}>
