@@ -24,10 +24,12 @@ function Vehicles()
         <FusePageCarded
             classes={{
                 content: "flex flex-col", // apilamos lista en vivo + tabla
-                header: "min-h-160 h-160 sm:h-160 sm:min-h-160" // aún más alto para el título
+                header: "min-h-200 h-200 sm:h-200 sm:min-h-200 overflow-visible" // mucho más alto y sin overflow
             }}
             header={
-                <VehiclesHeader pageLayout={pageLayout} />
+                <div className="h-full overflow-visible">
+                    <VehiclesHeader pageLayout={pageLayout} />
+                </div>
             }
             content={
                 <div className="w-full">
