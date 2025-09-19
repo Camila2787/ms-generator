@@ -143,31 +143,31 @@ export default function VehiclesHeader() {
   }, [client]);
 
   return (
-    <div className="flex flex-col h-full p-32 pt-48 overflow-visible">
-      {/* Primera fila: Título y estado */}
-      <div className="flex items-center justify-between mb-24">
-        <div className="flex items-center" style={{ position: 'relative', zIndex: 10 }}>
-          <DirectionsCarIcon style={{ fontSize: 32, color: '#1976d2', marginRight: 16 }} />
-          <div style={{ position: 'relative', zIndex: 10 }}>
-            <Typography 
-              variant="h5" 
-              style={{ 
-                fontWeight: 600, 
-                color: '#333',
-                position: 'relative',
-                zIndex: 10,
-                lineHeight: 1.2
-              }}
-            >
-              Generador de Vehículos
-            </Typography>
-            <Typography variant="body2" className={classes.subtitle}>
-              Sistema de simulación en tiempo real
-            </Typography>
-          </div>
+    <div className="flex flex-col h-full p-24" style={{ minHeight: '200px' }}>
+      {/* Primera fila: Título */}
+      <div className="flex items-center mb-16" style={{ height: '60px' }}>
+        <DirectionsCarIcon style={{ fontSize: 32, color: '#1976d2', marginRight: 16 }} />
+        <div>
+          <Typography 
+            variant="h4" 
+            style={{ 
+              fontWeight: 600, 
+              color: '#333',
+              margin: 0,
+              padding: 0
+            }}
+          >
+            Generador de Vehículos
+          </Typography>
+          <Typography variant="body2" style={{ color: '#666', marginTop: 4 }}>
+            Sistema de simulación en tiempo real
+          </Typography>
         </div>
+      </div>
 
-        {/* Estado y contador */}
+      {/* Segunda fila: Estado y contador */}
+      <div className="flex items-center justify-between mb-16" style={{ height: '40px' }}>
+        <div></div> {/* Espacio vacío */}
         <div className="flex items-center">
           <Chip
             icon={<DirectionsCarIcon />}
@@ -187,10 +187,8 @@ export default function VehiclesHeader() {
         </div>
       </div>
 
-      {/* Segunda fila: Botones de control */}
-      <div className="flex items-center justify-between">
-        <div></div> {/* Espacio vacío para centrar botones */}
-        
+      {/* Tercera fila: Botones de control */}
+      <div className="flex items-center justify-center" style={{ height: '60px' }}>
         <div className="flex items-center">
           <Button
             onClick={start}
@@ -214,14 +212,14 @@ export default function VehiclesHeader() {
             Detener Simulación
           </Button>
         </div>
-
-        {/* Progress indicator cuando está generando */}
-        {status.isGenerating && (
-          <div className="flex-1 ml-24">
-            <LinearProgress color="primary" />
-          </div>
-        )}
       </div>
+
+      {/* Progress indicator cuando está generando */}
+      {status.isGenerating && (
+        <div className="mt-16">
+          <LinearProgress color="primary" />
+        </div>
+      )}
     </div>
   );
 }
