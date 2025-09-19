@@ -143,75 +143,76 @@ export default function VehiclesHeader() {
   }, [client]);
 
   return (
-    <div className={classes.headerCard}>
-      <Grid container alignItems="center" spacing={3}>
-        <Grid item xs={12} sm>
-          <Box display="flex" alignItems="center">
-            <DirectionsCarIcon style={{ fontSize: 32, color: '#1976d2', marginRight: 16 }} />
-            <Box>
-              <Typography variant="h5" className={classes.title}>
-                Generador de Vehículos
-              </Typography>
-              <Typography variant="body2" className={classes.subtitle}>
-                Sistema de simulación en tiempo real
-              </Typography>
-            </Box>
-          </Box>
-        </Grid>
+    <div className="flex flex-col h-full p-24">
+      {/* Primera fila: Título y estado */}
+      <div className="flex items-center justify-between mb-16">
+        <div className="flex items-center">
+          <DirectionsCarIcon style={{ fontSize: 32, color: '#1976d2', marginRight: 16 }} />
+          <div>
+            <Typography variant="h4" className={classes.title}>
+              Generador de Vehículos
+            </Typography>
+            <Typography variant="body2" className={classes.subtitle}>
+              Sistema de simulación en tiempo real
+            </Typography>
+          </div>
+        </div>
 
-        <Grid item>
-          <Box display="flex" flexDirection="column" alignItems="flex-end">
-            {/* Estado y contador */}
-            <Box display="flex" alignItems="center" style={{ marginBottom: 16 }}>
-              <Chip
-                icon={<DirectionsCarIcon />}
-                label={status.isGenerating ? 'Generando' : 'Detenido'}
-                className={classes.statusChip}
-                style={{ 
-                  backgroundColor: status.isGenerating ? '#c8e6c9' : '#f5f5f5',
-                  color: status.isGenerating ? '#2e7d32' : '#666'
-                }}
-              />
-              <Chip
-                icon={<DirectionsCarIcon />}
-                label={`${Number(status.generatedCount || 0).toLocaleString()} vehículos`}
-                className={classes.countChip}
-                style={{ marginLeft: 8 }}
-              />
-            </Box>
+        {/* Estado y contador */}
+        <div className="flex items-center">
+          <Chip
+            icon={<DirectionsCarIcon />}
+            label={status.isGenerating ? 'Generando' : 'Detenido'}
+            className={classes.statusChip}
+            style={{ 
+              backgroundColor: status.isGenerating ? '#c8e6c9' : '#f5f5f5',
+              color: status.isGenerating ? '#2e7d32' : '#666'
+            }}
+          />
+          <Chip
+            icon={<DirectionsCarIcon />}
+            label={`${Number(status.generatedCount || 0).toLocaleString()} vehículos`}
+            className={classes.countChip}
+            style={{ marginLeft: 8 }}
+          />
+        </div>
+      </div>
 
-            {/* Botones de control */}
-            <Box display="flex" alignItems="center">
-              <Button
-                onClick={start}
-                className={classes.btnStart}
-                startIcon={working ? <CircularProgress size={18} color="inherit" /> : <PlayArrowIcon />}
-                disabled={working || status.isGenerating}
-                variant="contained"
-              >
-                Iniciar Simulación
-              </Button>
+      {/* Segunda fila: Botones de control */}
+      <div className="flex items-center justify-between">
+        <div></div> {/* Espacio vacío para centrar botones */}
+        
+        <div className="flex items-center">
+          <Button
+            onClick={start}
+            className={classes.btnStart}
+            startIcon={working ? <CircularProgress size={18} color="inherit" /> : <PlayArrowIcon />}
+            disabled={working || status.isGenerating}
+            variant="contained"
+            size="large"
+          >
+            Iniciar Simulación
+          </Button>
 
-              <Button
-                onClick={stop}
-                className={classes.btnStop}
-                startIcon={working ? <CircularProgress size={18} color="inherit" /> : <StopIcon />}
-                disabled={working || !status.isGenerating}
-                variant="contained"
-              >
-                Detener Simulación
-              </Button>
-            </Box>
+          <Button
+            onClick={stop}
+            className={classes.btnStop}
+            startIcon={working ? <CircularProgress size={18} color="inherit" /> : <StopIcon />}
+            disabled={working || !status.isGenerating}
+            variant="contained"
+            size="large"
+          >
+            Detener Simulación
+          </Button>
+        </div>
 
-            {/* Progress indicator cuando está generando */}
-            {status.isGenerating && (
-              <Box className={classes.progressContainer} style={{ width: '100%', maxWidth: 300, marginTop: 16 }}>
-                <LinearProgress color="primary" />
-              </Box>
-            )}
-          </Box>
-        </Grid>
-      </Grid>
+        {/* Progress indicator cuando está generando */}
+        {status.isGenerating && (
+          <div className="flex-1 ml-24">
+            <LinearProgress color="primary" />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

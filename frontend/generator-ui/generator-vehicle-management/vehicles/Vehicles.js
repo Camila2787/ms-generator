@@ -24,8 +24,7 @@ function Vehicles()
         <FusePageCarded
             classes={{
                 content: "flex flex-col", // apilamos lista en vivo + tabla
-                //header : "min-h-72 h-72 sm:h-136 sm:min-h-136" // default tall/short header
-                header: "min-h-72 h-72 sm:h-72 sm:min-h-72" // short header always
+                header: "min-h-136 h-136 sm:h-136 sm:min-h-136" // taller header para mostrar botones
             }}
             header={
                 <VehiclesHeader pageLayout={pageLayout} />
