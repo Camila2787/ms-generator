@@ -143,9 +143,9 @@ export default function VehiclesHeader() {
   }, [client]);
 
   return (
-    <div className="flex flex-col h-full p-24 pt-32">
+    <div className="flex flex-col h-full p-24 pt-40">
       {/* Primera fila: Título y estado */}
-      <div className="flex items-center justify-between mb-16">
+      <div className="flex items-center justify-between mb-20">
         <div className="flex items-center">
           <DirectionsCarIcon style={{ fontSize: 32, color: '#1976d2', marginRight: 16 }} />
           <div>
