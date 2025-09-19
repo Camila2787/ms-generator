@@ -23,9 +23,12 @@ function Vehicles()
     return (
         <div className="flex flex-col h-full">
             {/* Header fuera del FusePageCarded */}
-            <div className="bg-gray-100 p-24" style={{ minHeight: '180px' }}>
+            <div className="bg-gray-100 p-24 pt-32 pb-32" style={{ minHeight: '200px' }}>
                 <VehiclesHeader pageLayout={pageLayout} />
             </div>
+            
+            {/* Separación entre header y contenido */}
+            <div style={{ height: '24px' }}></div>
             
             {/* Contenido principal */}
             <FusePageCarded

@@ -261,7 +261,7 @@ function LiveGeneratedList() {
   }, [rows]);
 
   return (
-    <Box style={{ marginBottom: 32 }}>
+    <Box style={{ marginTop: 16, marginBottom: 32 }}>
       {/* Solo mostrar la tabla, sin header duplicado */}
       {rows.length > 0 ? (
         memoizedTable
