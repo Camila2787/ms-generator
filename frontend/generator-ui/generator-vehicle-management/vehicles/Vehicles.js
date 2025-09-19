@@ -21,37 +21,41 @@ function Vehicles()
     }
 
     return (
-        <FusePageCarded
-            classes={{
-                content: "flex flex-col", // apilamos lista en vivo + tabla
-                header: "min-h-200 h-200 sm:h-200 sm:min-h-200 overflow-visible" // mucho más alto y sin overflow
-            }}
-            header={
-                <div className="h-full overflow-visible">
-                    <VehiclesHeader pageLayout={pageLayout} />
-                </div>
-            }
-            content={
-                <div className="w-full">
-                    {/* Lista en vivo virtualizada */}
-                    <LiveGeneratedList />
+        <div className="flex flex-col h-full">
+            {/* Header fuera del FusePageCarded */}
+            <div className="bg-gray-100 p-24" style={{ minHeight: '180px' }}>
+                <VehiclesHeader pageLayout={pageLayout} />
+            </div>
+            
+            {/* Contenido principal */}
+            <FusePageCarded
+                classes={{
+                    content: "flex flex-col", // apilamos lista en vivo + tabla
+                    header: "hidden" // ocultamos el header del FusePageCarded
+                }}
+                header={<div></div>} // header vacío
+                content={
+                    <div className="w-full">
+                        {/* Lista en vivo virtualizada */}
+                        <LiveGeneratedList />
 
-                    {/* Tabla CRUD existente */}
-                    <div className="mt-16">
-                        <VehiclesTable/>
+                        {/* Tabla CRUD existente */}
+                        <div className="mt-16">
+                            <VehiclesTable/>
+                        </div>
                     </div>
-                </div>
-            }
-            leftSidebarHeader={
-                <VehiclesFilterHeader/>
-            }
-            leftSidebarContent={
-                <VehiclesFilterContent/>
-            }
-            ref={pageLayout}
-            innerScroll
-            leftSidebarVariant='permanent'
-        />
+                }
+                leftSidebarHeader={
+                    <VehiclesFilterHeader/>
+                }
+                leftSidebarContent={
+                    <VehiclesFilterContent/>
+                }
+                ref={pageLayout}
+                innerScroll
+                leftSidebarVariant='permanent'
+            />
+        </div>
     );
 }
 

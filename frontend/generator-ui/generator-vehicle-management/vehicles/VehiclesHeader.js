@@ -143,9 +143,9 @@ export default function VehiclesHeader() {
   }, [client]);
 
   return (
-    <div className="flex flex-col h-full p-24" style={{ minHeight: '200px' }}>
+    <div className="flex flex-col">
       {/* Primera fila: Título */}
-      <div className="flex items-center mb-16" style={{ height: '60px' }}>
+      <div className="flex items-center mb-16">
         <DirectionsCarIcon style={{ fontSize: 32, color: '#1976d2', marginRight: 16 }} />
         <div>
           <Typography 
@@ -154,7 +154,8 @@ export default function VehiclesHeader() {
               fontWeight: 600, 
               color: '#333',
               margin: 0,
-              padding: 0
+              padding: 0,
+              lineHeight: 1.2
             }}
           >
             Generador de Vehículos
@@ -166,7 +167,7 @@ export default function VehiclesHeader() {
       </div>
 
       {/* Segunda fila: Estado y contador */}
-      <div className="flex items-center justify-between mb-16" style={{ height: '40px' }}>
+      <div className="flex items-center justify-between mb-16">
         <div></div> {/* Espacio vacío */}
         <div className="flex items-center">
           <Chip
@@ -188,7 +189,7 @@ export default function VehiclesHeader() {
       </div>
 
       {/* Tercera fila: Botones de control */}
-      <div className="flex items-center justify-center" style={{ height: '60px' }}>
+      <div className="flex items-center justify-center">
         <div className="flex items-center">
           <Button
             onClick={start}
