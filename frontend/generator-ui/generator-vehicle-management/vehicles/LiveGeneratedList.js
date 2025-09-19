@@ -12,7 +12,6 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableContainer,
   TableHead,
   TableRow,
   Paper,
@@ -118,15 +117,15 @@ const VehicleTable = React.memo(({ rows }) => {
   return (
     <Card style={{ borderRadius: 16, boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
       <CardContent style={{ padding: 0 }}>
-        <TableContainer 
-          component={Paper} 
+        <Paper 
           style={{ 
             maxHeight: 400, 
             borderRadius: 16,
-            boxShadow: 'none'
+            boxShadow: 'none',
+            overflow: 'auto'
           }}
         >
-          <Table stickyHeader>
+          <Table>
             <TableHead>
               <TableRow style={{ backgroundColor: '#f5f5f5' }}>
                 <TableCell style={{ fontWeight: 'bold', fontSize: 16 }}>
@@ -167,7 +166,7 @@ const VehicleTable = React.memo(({ rows }) => {
               ))}
             </TableBody>
           </Table>
-        </TableContainer>
+        </Paper>
       </CardContent>
     </Card>
   );
