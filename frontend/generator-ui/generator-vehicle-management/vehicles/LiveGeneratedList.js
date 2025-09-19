@@ -261,11 +261,11 @@ function LiveGeneratedList() {
   }, [rows]);
 
   return (
-    <Box style={{ marginBottom: 32 }}>
+    <Box style={{ marginTop: 32, marginBottom: 32 }}>
       {/* Header de la sección */}
       <Card style={{ 
         borderRadius: 16, 
-        marginBottom: 24, 
+        marginBottom: 32, 
         background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
         boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
       }}>
