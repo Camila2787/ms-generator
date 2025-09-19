@@ -261,108 +261,22 @@ function LiveGeneratedList() {
   }, [rows]);
 
   return (
-    <Box style={{ marginTop: 0, marginBottom: 32 }}>
-      {/* Header de la sección */}
-      <Card style={{ 
-        borderRadius: 16, 
-        marginBottom: 24, 
-        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-        position: 'relative',
-        zIndex: 0
-      }}>
-        <CardContent style={{ padding: 24 }}>
-          <Grid container alignItems="center" spacing={3}>
-            <Grid item xs={12} sm>
-              <Box display="flex" alignItems="center">
-                <Box 
-                  style={{ 
-                    width: 48, 
-                    height: 48, 
-                    backgroundColor: 'rgba(255,255,255,0.3)', 
-                    borderRadius: 12, 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center',
-                    marginRight: 16,
-                    backdropFilter: 'blur(10px)'
-                  }}
-                >
-                  <span style={{ fontSize: 24 }}>🚗</span>
-                </Box>
-                <Box>
-                  <Typography variant="h5" style={{ fontWeight: 'bold', color: '#333' }}>
-                    Vehículos Generados en Tiempo Real
-                  </Typography>
-                  <Typography variant="body2" style={{ color: '#666', marginTop: 4 }}>
-                    Lista actualizada cada segundo con throttling optimizado
-                  </Typography>
-                </Box>
-              </Box>
-            </Grid>
-            
-            <Grid item>
-              <Box display="flex" flexDirection="column" alignItems="flex-end" gap={1}>
-                <Box display="flex" gap={2} alignItems="center">
-                  <Chip
-                    label={status.isGenerating ? 'Generando...' : 'Detenido'}
-                    style={{
-                      backgroundColor: status.isGenerating ? '#4caf50' : '#9e9e9e',
-                      color: 'white',
-                      fontWeight: 'bold'
-                    }}
-                  />
-                  <Chip
-                    label={`${status.generatedCount.toLocaleString()} total`}
-                    style={{
-                      backgroundColor: '#2196f3',
-                      color: 'white',
-                      fontWeight: 'bold'
-                    }}
-                  />
-                  <Chip
-                    label={`${rows.length} mostrando`}
-                    style={{
-                      backgroundColor: '#ff9800',
-                      color: 'white',
-                      fontWeight: 'bold'
-                    }}
-                  />
-                </Box>
-                
-                {status.isGenerating && (
-                  <Box style={{ width: '100%', maxWidth: 200 }}>
-                    <LinearProgress 
-                      style={{ 
-                        backgroundColor: 'rgba(255,255,255,0.3)', 
-                        borderRadius: 8,
-                        height: 4 
-                      }}
-                      color="primary"
-                    />
-                  </Box>
-                )}
-              </Box>
-            </Grid>
-          </Grid>
-        </CardContent>
-      </Card>
-      
-      {/* Tabla de vehículos */}
+    <Box style={{ marginBottom: 32 }}>
+      {/* Solo mostrar la tabla, sin header duplicado */}
       {rows.length > 0 ? (
         memoizedTable
       ) : (
         <Card style={{ 
-          borderRadius: 16, 
-          boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-          textAlign: 'center'
+          borderRadius: 8, 
+          textAlign: 'center',
+          backgroundColor: '#fafafa'
         }}>
           <CardContent style={{ padding: 48 }}>
             <Box 
               style={{ 
-                width: 80, 
-                height: 80, 
-                backgroundColor: '#f5f5f5', 
+                width: 60, 
+                height: 60, 
+                backgroundColor: '#e0e0e0', 
                 borderRadius: '50%', 
                 display: 'flex', 
                 alignItems: 'center', 
@@ -370,7 +284,7 @@ function LiveGeneratedList() {
                 margin: '0 auto 16px'
               }}
             >
-              <span style={{ fontSize: 32 }}>
+              <span style={{ fontSize: 24 }}>
                 {status.isGenerating ? '⚡' : '🚗'}
               </span>
             </Box>
