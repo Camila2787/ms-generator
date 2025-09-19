@@ -5,44 +5,171 @@ import {
   ON_GENERATOR_STATUS,
   GET_GENERATION_STATUS_GQL
 } from '../gql/Vehicle';
+import {
+  Card,
+  CardContent,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Chip,
+  Box,
+  Grid,
+  LinearProgress
+} from '@material-ui/core';
 
 const MAX_ITEMS = 1000;
 const RENDER_THROTTLE_MS = 1000; // 1 segundo como especifica la Parte 1
 
 // Componente memoizado para la fila de la tabla
 const VehicleRow = React.memo(({ vehicle, index }) => {
+  const getTypeColor = (type) => {
+    switch (type) {
+      case 'SUV': return '#4caf50';
+      case 'PickUp': return '#2196f3';
+      case 'Sedan': return '#ff9800';
+      default: return '#9e9e9e';
+    }
+  };
+
+  const getPowerSourceColor = (powerSource) => {
+    switch (powerSource) {
+      case 'Electric': return '#4caf50';
+      case 'Hybrid': return '#ff9800';
+      case 'Gas': return '#f44336';
+      default: return '#9e9e9e';
+    }
+  };
+
+  const getPowerSourceIcon = (powerSource) => {
+    switch (powerSource) {
+      case 'Electric': return '⚡';
+      case 'Hybrid': return '🔋';
+      case 'Gas': return '⛽';
+      default: return '🔧';
+    }
+  };
+
   return (
-    <tr key={(vehicle.aid || index) + ':' + index}>
-      <td className="border p-2">{vehicle.data && vehicle.data.year}</td>
-      <td className="border p-2">{vehicle.data && vehicle.data.type}</td>
-      <td className="border p-2">{vehicle.data && vehicle.data.hp}</td>
-      <td className="border p-2">{vehicle.data && vehicle.data.topSpeed}</td>
-      <td className="border p-2">{vehicle.data && vehicle.data.powerSource}</td>
-    </tr>
+    <TableRow 
+      key={(vehicle.aid || index) + ':' + index}
+      style={{ 
+        backgroundColor: index % 2 === 0 ? '#fafafa' : 'white',
+        transition: 'background-color 0.2s ease'
+      }}
+      hover
+    >
+      <TableCell>
+        <Typography variant="h6" color="primary" fontWeight="bold">
+          {vehicle.data && vehicle.data.year}
+        </Typography>
+      </TableCell>
+      <TableCell>
+        <Chip
+          label={vehicle.data && vehicle.data.type}
+          style={{
+            backgroundColor: getTypeColor(vehicle.data && vehicle.data.type),
+            color: 'white',
+            fontWeight: 'bold'
+          }}
+        />
+      </TableCell>
+      <TableCell>
+        <Box display="flex" alignItems="center">
+          <Typography variant="h6" color="secondary" fontWeight="bold">
+            {vehicle.data && vehicle.data.hp}
+          </Typography>
+          <Typography variant="body2" color="textSecondary" style={{ marginLeft: 4 }}>
+            HP
+          </Typography>
+        </Box>
+      </TableCell>
+      <TableCell>
+        <Box display="flex" alignItems="center">
+          <Typography variant="h6" color="error" fontWeight="bold">
+            {vehicle.data && vehicle.data.topSpeed}
+          </Typography>
+          <Typography variant="body2" color="textSecondary" style={{ marginLeft: 4 }}>
+            km/h
+          </Typography>
+        </Box>
+      </TableCell>
+      <TableCell>
+        <Chip
+          icon={<span style={{ fontSize: 16 }}>{getPowerSourceIcon(vehicle.data && vehicle.data.powerSource)}</span>}
+          label={vehicle.data && vehicle.data.powerSource}
+          style={{
+            backgroundColor: getPowerSourceColor(vehicle.data && vehicle.data.powerSource),
+            color: 'white',
+            fontWeight: 'bold'
+          }}
+        />
+      </TableCell>
+    </TableRow>
   );
 });
 
 // Componente memoizado para la tabla
 const VehicleTable = React.memo(({ rows }) => {
   return (
-    <div className="overflow-auto max-h-96">
-      <table className="w-full border-collapse">
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="border p-2">Año</th>
-            <th className="border p-2">Tipo</th>
-            <th className="border p-2">Potencia (HP)</th>
-            <th className="border p-2">Vel. Máxima</th>
-            <th className="border p-2">Fuente de Energía</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((vehicle, idx) => (
-            <VehicleRow key={(vehicle.aid || idx) + ':' + idx} vehicle={vehicle} index={idx} />
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <Card style={{ borderRadius: 16, boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
+      <CardContent style={{ padding: 0 }}>
+        <TableContainer 
+          component={Paper} 
+          style={{ 
+            maxHeight: 400, 
+            borderRadius: 16,
+            boxShadow: 'none'
+          }}
+        >
+          <Table stickyHeader>
+            <TableHead>
+              <TableRow style={{ backgroundColor: '#f5f5f5' }}>
+                <TableCell style={{ fontWeight: 'bold', fontSize: 16 }}>
+                  <Box display="flex" alignItems="center">
+                    <span style={{ marginRight: 8 }}>📅</span>
+                    Año
+                  </Box>
+                </TableCell>
+                <TableCell style={{ fontWeight: 'bold', fontSize: 16 }}>
+                  <Box display="flex" alignItems="center">
+                    <span style={{ marginRight: 8 }}>🚗</span>
+                    Tipo
+                  </Box>
+                </TableCell>
+                <TableCell style={{ fontWeight: 'bold', fontSize: 16 }}>
+                  <Box display="flex" alignItems="center">
+                    <span style={{ marginRight: 8 }}>⚡</span>
+                    Potencia (HP)
+                  </Box>
+                </TableCell>
+                <TableCell style={{ fontWeight: 'bold', fontSize: 16 }}>
+                  <Box display="flex" alignItems="center">
+                    <span style={{ marginRight: 8 }}>🏁</span>
+                    Vel. Máxima
+                  </Box>
+                </TableCell>
+                <TableCell style={{ fontWeight: 'bold', fontSize: 16 }}>
+                  <Box display="flex" alignItems="center">
+                    <span style={{ marginRight: 8 }}>🔋</span>
+                    Fuente de Energía
+                  </Box>
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {rows.map((vehicle, idx) => (
+                <VehicleRow key={(vehicle.aid || idx) + ':' + idx} vehicle={vehicle} index={idx} />
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </CardContent>
+    </Card>
   );
 });
 
@@ -135,20 +262,130 @@ function LiveGeneratedList() {
   }, [rows]);
 
   return (
-    <div className="mb-16">
-      <h2>Vehículos Generados en Tiempo Real</h2>
-      <p>Estado: {status.isGenerating ? 'Generando...' : 'Detenido'}</p>
-      <p>Total: {status.generatedCount} vehículos</p>
-      <p>Mostrando: {rows.length} vehículos</p>
+    <Box style={{ marginBottom: 32 }}>
+      {/* Header de la sección */}
+      <Card style={{ 
+        borderRadius: 16, 
+        marginBottom: 24, 
+        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
+      }}>
+        <CardContent style={{ padding: 24 }}>
+          <Grid container alignItems="center" spacing={3}>
+            <Grid item xs={12} sm>
+              <Box display="flex" alignItems="center">
+                <Box 
+                  style={{ 
+                    width: 48, 
+                    height: 48, 
+                    backgroundColor: 'rgba(255,255,255,0.3)', 
+                    borderRadius: 12, 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    marginRight: 16,
+                    backdropFilter: 'blur(10px)'
+                  }}
+                >
+                  <span style={{ fontSize: 24 }}>🚗</span>
+                </Box>
+                <Box>
+                  <Typography variant="h5" style={{ fontWeight: 'bold', color: '#333' }}>
+                    Vehículos Generados en Tiempo Real
+                  </Typography>
+                  <Typography variant="body2" style={{ color: '#666', marginTop: 4 }}>
+                    Lista actualizada cada segundo con throttling optimizado
+                  </Typography>
+                </Box>
+              </Box>
+            </Grid>
+            
+            <Grid item>
+              <Box display="flex" flexDirection="column" alignItems="flex-end" gap={1}>
+                <Box display="flex" gap={2} alignItems="center">
+                  <Chip
+                    label={status.isGenerating ? 'Generando...' : 'Detenido'}
+                    style={{
+                      backgroundColor: status.isGenerating ? '#4caf50' : '#9e9e9e',
+                      color: 'white',
+                      fontWeight: 'bold'
+                    }}
+                  />
+                  <Chip
+                    label={`${status.generatedCount.toLocaleString()} total`}
+                    style={{
+                      backgroundColor: '#2196f3',
+                      color: 'white',
+                      fontWeight: 'bold'
+                    }}
+                  />
+                  <Chip
+                    label={`${rows.length} mostrando`}
+                    style={{
+                      backgroundColor: '#ff9800',
+                      color: 'white',
+                      fontWeight: 'bold'
+                    }}
+                  />
+                </Box>
+                
+                {status.isGenerating && (
+                  <Box style={{ width: '100%', maxWidth: 200 }}>
+                    <LinearProgress 
+                      style={{ 
+                        backgroundColor: 'rgba(255,255,255,0.3)', 
+                        borderRadius: 8,
+                        height: 4 
+                      }}
+                      color="primary"
+                    />
+                  </Box>
+                )}
+              </Box>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
       
-      {memoizedTable}
-      
-      {rows.length === 0 && (
-        <div className="text-center py-8">
-          <p>{status.isGenerating ? 'Generando vehículos...' : 'No hay vehículos generados'}</p>
-        </div>
+      {/* Tabla de vehículos */}
+      {rows.length > 0 ? (
+        memoizedTable
+      ) : (
+        <Card style={{ 
+          borderRadius: 16, 
+          boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+          textAlign: 'center'
+        }}>
+          <CardContent style={{ padding: 48 }}>
+            <Box 
+              style={{ 
+                width: 80, 
+                height: 80, 
+                backgroundColor: '#f5f5f5', 
+                borderRadius: '50%', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                margin: '0 auto 16px'
+              }}
+            >
+              <span style={{ fontSize: 32 }}>
+                {status.isGenerating ? '⚡' : '🚗'}
+              </span>
+            </Box>
+            <Typography variant="h6" style={{ fontWeight: 'bold', marginBottom: 8 }}>
+              {status.isGenerating ? 'Generando vehículos...' : 'No hay vehículos generados'}
+            </Typography>
+            <Typography variant="body2" color="textSecondary">
+              {status.isGenerating 
+                ? 'Los vehículos aparecerán aquí en tiempo real conforme se vayan generando.'
+                : 'Haz clic en "Iniciar Simulación" para comenzar a generar vehículos.'
+              }
+            </Typography>
+          </CardContent>
+        </Card>
       )}
-    </div>
+    </Box>
   );
 }
 

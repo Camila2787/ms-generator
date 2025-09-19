@@ -5,9 +5,11 @@ import {
   Button,
   Chip,
   Grid,
-  Tooltip,
   Typography,
-  CircularProgress
+  CircularProgress,
+  Card,
+  CardContent,
+  LinearProgress
 } from '@material-ui/core';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import StopIcon from '@material-ui/icons/Stop';
@@ -22,58 +24,66 @@ import {
 } from '../gql/Vehicle';
 
 const useStyles = makeStyles((theme) => ({
-  container: {
-    width: '100%',
-    padding: theme.spacing(2.5, 3),
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderRadius: 12,
-    background:
-      theme.palette.type === 'dark'
-        ? 'linear-gradient(90deg, rgba(37,40,54,1) 0%, rgba(26,28,38,1) 100%)'
-        : 'linear-gradient(90deg, #f7f9fc 0%, #ffffff 100%)',
-    border: `1px solid ${
-      theme.palette.type === 'dark'
-        ? 'rgba(255,255,255,0.06)'
-        : 'rgba(0,0,0,0.06)'
-    }`,
+  headerCard: {
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    color: 'white',
+    borderRadius: 16,
+    marginBottom: 24,
+    boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
   },
   title: {
     fontWeight: 700,
     letterSpacing: 0.5,
+    color: 'white',
   },
-  right: {
-    display: 'flex',
-    gap: theme.spacing(1.25),
-    alignItems: 'center',
+  subtitle: {
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 4,
   },
-  chipOk: {
-    backgroundColor: '#16a34a', // Tailwind green-600 aprox
-    color: '#fff',
+  statusChip: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    color: 'white',
     fontWeight: 600,
+    backdropFilter: 'blur(10px)',
   },
-  chipWarn: {
-    backgroundColor: '#ef4444', // Tailwind red-500 aprox
-    color: '#fff',
+  countChip: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    color: 'white',
     fontWeight: 600,
-  },
-  chipCount: {
-    fontWeight: 600,
+    backdropFilter: 'blur(10px)',
   },
   btnStart: {
     textTransform: 'none',
     fontWeight: 700,
-    backgroundColor: '#22c55e',
-    color: '#0b3018',
-    '&:hover': { backgroundColor: '#16a34a' },
+    backgroundColor: '#4caf50',
+    color: 'white',
+    borderRadius: 12,
+    padding: '12px 24px',
+    boxShadow: '0 4px 16px rgba(76,175,80,0.3)',
+    '&:hover': { 
+      backgroundColor: '#45a049',
+      boxShadow: '0 6px 20px rgba(76,175,80,0.4)',
+      transform: 'translateY(-2px)',
+    },
+    transition: 'all 0.3s ease',
   },
   btnStop: {
     textTransform: 'none',
     fontWeight: 700,
-    backgroundColor: '#ef4444',
-    color: '#3a0a0a',
-    '&:hover': { backgroundColor: '#dc2626' },
+    backgroundColor: '#f44336',
+    color: 'white',
+    borderRadius: 12,
+    padding: '12px 24px',
+    boxShadow: '0 4px 16px rgba(244,67,54,0.3)',
+    '&:hover': { 
+      backgroundColor: '#d32f2f',
+      boxShadow: '0 6px 20px rgba(244,67,54,0.4)',
+      transform: 'translateY(-2px)',
+    },
+    transition: 'all 0.3s ease',
+  },
+  progressContainer: {
+    marginTop: 16,
   },
 }));
 
@@ -148,52 +158,96 @@ export default function VehiclesHeader() {
   }, [client]);
 
   return (
-    <Box className={classes.container}>
-      <Box>
-        <Typography variant="h5" className={classes.title}>
-          Generador de Vehículos
-        </Typography>
-        <Typography variant="body2" color="textSecondary">
-          Sistema de simulación en tiempo real
-        </Typography>
-      </Box>
+    <Card className={classes.headerCard}>
+      <CardContent style={{ padding: 32 }}>
+        <Grid container alignItems="center" spacing={3}>
+          <Grid item xs={12} sm>
+            <Box display="flex" alignItems="center">
+              <Box 
+                style={{ 
+                  width: 64, 
+                  height: 64, 
+                  backgroundColor: 'rgba(255,255,255,0.2)', 
+                  borderRadius: 16, 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  marginRight: 16,
+                  backdropFilter: 'blur(10px)'
+                }}
+              >
+                <DirectionsCarIcon style={{ fontSize: 32, color: 'white' }} />
+              </Box>
+              <Box>
+                <Typography variant="h4" className={classes.title}>
+                  Generador de Vehículos
+                </Typography>
+                <Typography variant="body1" className={classes.subtitle}>
+                  Sistema de simulación en tiempo real
+                </Typography>
+              </Box>
+            </Box>
+          </Grid>
 
-      <Box className={classes.right}>
-        {/* Estado del generador */}
-        <Chip
-          icon={<DirectionsCarIcon />}
-          label={status.isGenerating ? 'Generando' : 'Detenido'}
-          className={status.isGenerating ? classes.chipOk : classes.chipWarn}
-        />
+          <Grid item>
+            <Box display="flex" flexDirection="column" alignItems="flex-end" gap={2}>
+              {/* Estado y contador */}
+              <Box display="flex" gap={2} alignItems="center">
+                <Chip
+                  icon={<DirectionsCarIcon />}
+                  label={status.isGenerating ? 'Generando' : 'Detenido'}
+                  className={classes.statusChip}
+                  style={{ 
+                    backgroundColor: status.isGenerating ? 'rgba(76,175,80,0.8)' : 'rgba(158,158,158,0.8)' 
+                  }}
+                />
+                <Chip
+                  icon={<DirectionsCarIcon />}
+                  label={`${Number(status.generatedCount || 0).toLocaleString()} vehículos`}
+                  className={classes.countChip}
+                />
+              </Box>
 
-        {/* Contador de vehículos */}
-        <Chip
-          icon={<DirectionsCarIcon />}
-          label={`${Number(status.generatedCount || 0).toLocaleString()} vehículos`}
-          className={classes.chipCount}
-        />
+              {/* Botones de control */}
+              <Box display="flex" gap={2}>
+                <Button
+                  onClick={start}
+                  className={classes.btnStart}
+                  startIcon={working ? <CircularProgress size={18} color="inherit" /> : <PlayArrowIcon />}
+                  disabled={working || status.isGenerating}
+                  variant="contained"
+                >
+                  Iniciar Simulación
+                </Button>
 
-        {/* Botones de control */}
-        <Button
-          onClick={start}
-          className={classes.btnStart}
-          startIcon={working ? <CircularProgress size={18} color="inherit" /> : <PlayArrowIcon />}
-          disabled={working || status.isGenerating}
-          variant="contained"
-        >
-          Iniciar Simulación
-        </Button>
+                <Button
+                  onClick={stop}
+                  className={classes.btnStop}
+                  startIcon={working ? <CircularProgress size={18} color="inherit" /> : <StopIcon />}
+                  disabled={working || !status.isGenerating}
+                  variant="contained"
+                >
+                  Detener Simulación
+                </Button>
+              </Box>
 
-        <Button
-          onClick={stop}
-          className={classes.btnStop}
-          startIcon={working ? <CircularProgress size={18} color="inherit" /> : <StopIcon />}
-          disabled={working || !status.isGenerating}
-          variant="contained"
-        >
-          Detener Simulación
-        </Button>
-      </Box>
-    </Box>
+              {/* Progress indicator cuando está generando */}
+              {status.isGenerating && (
+                <Box className={classes.progressContainer} style={{ width: '100%', maxWidth: 300 }}>
+                  <LinearProgress 
+                    style={{ 
+                      backgroundColor: 'rgba(255,255,255,0.2)', 
+                      borderRadius: 8,
+                      height: 6 
+                    }}
+                    color="primary"
+                  />
+                </Box>
+              )}
+            </Box>
+          </Grid>
+        </Grid>
+      </CardContent>
+    </Card>
   );
 }
