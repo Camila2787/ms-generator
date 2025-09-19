@@ -25,64 +25,47 @@ import {
 
 const useStyles = makeStyles((theme) => ({
   headerCard: {
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    color: 'white',
-    borderRadius: 16,
-    marginBottom: 48,
-    boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-    position: 'relative',
-    zIndex: 1,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+    marginBottom: 24,
+    padding: 16,
   },
   title: {
-    fontWeight: 700,
-    letterSpacing: 0.5,
-    color: 'white',
+    fontWeight: 600,
+    color: '#333',
   },
   subtitle: {
-    color: 'rgba(255,255,255,0.8)',
+    color: '#666',
     marginTop: 4,
   },
   statusChip: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    color: 'white',
+    backgroundColor: '#e3f2fd',
+    color: '#1976d2',
     fontWeight: 600,
-    backdropFilter: 'blur(10px)',
   },
   countChip: {
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    color: 'white',
+    backgroundColor: '#e8f5e8',
+    color: '#2e7d32',
     fontWeight: 600,
-    backdropFilter: 'blur(10px)',
   },
   btnStart: {
     textTransform: 'none',
-    fontWeight: 700,
+    fontWeight: 600,
     backgroundColor: '#4caf50',
     color: 'white',
-    borderRadius: 12,
-    padding: '12px 24px',
-    boxShadow: '0 4px 16px rgba(76,175,80,0.3)',
+    marginRight: 8,
     '&:hover': { 
       backgroundColor: '#45a049',
-      boxShadow: '0 6px 20px rgba(76,175,80,0.4)',
-      transform: 'translateY(-2px)',
     },
-    transition: 'all 0.3s ease',
   },
   btnStop: {
     textTransform: 'none',
-    fontWeight: 700,
+    fontWeight: 600,
     backgroundColor: '#f44336',
     color: 'white',
-    borderRadius: 12,
-    padding: '12px 24px',
-    boxShadow: '0 4px 16px rgba(244,67,54,0.3)',
     '&:hover': { 
       backgroundColor: '#d32f2f',
-      boxShadow: '0 6px 20px rgba(244,67,54,0.4)',
-      transform: 'translateY(-2px)',
     },
-    transition: 'all 0.3s ease',
   },
   progressContainer: {
     marginTop: 16,
@@ -160,96 +143,75 @@ export default function VehiclesHeader() {
   }, [client]);
 
   return (
-    <Card className={classes.headerCard}>
-      <CardContent style={{ padding: 32 }}>
-        <Grid container alignItems="center" spacing={3}>
-          <Grid item xs={12} sm>
-            <Box display="flex" alignItems="center">
-              <Box 
-                style={{ 
-                  width: 64, 
-                  height: 64, 
-                  backgroundColor: 'rgba(255,255,255,0.2)', 
-                  borderRadius: 16, 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center',
-                  marginRight: 16,
-                  backdropFilter: 'blur(10px)'
-                }}
-              >
-                <DirectionsCarIcon style={{ fontSize: 32, color: 'white' }} />
-              </Box>
-              <Box>
-                <Typography variant="h4" className={classes.title}>
-                  Generador de Vehículos
-                </Typography>
-                <Typography variant="body1" className={classes.subtitle}>
-                  Sistema de simulación en tiempo real
-                </Typography>
-              </Box>
+    <div className={classes.headerCard}>
+      <Grid container alignItems="center" spacing={3}>
+        <Grid item xs={12} sm>
+          <Box display="flex" alignItems="center">
+            <DirectionsCarIcon style={{ fontSize: 32, color: '#1976d2', marginRight: 16 }} />
+            <Box>
+              <Typography variant="h5" className={classes.title}>
+                Generador de Vehículos
+              </Typography>
+              <Typography variant="body2" className={classes.subtitle}>
+                Sistema de simulación en tiempo real
+              </Typography>
             </Box>
-          </Grid>
-
-          <Grid item>
-            <Box display="flex" flexDirection="column" alignItems="flex-end" gap={2}>
-              {/* Estado y contador */}
-              <Box display="flex" gap={2} alignItems="center">
-                <Chip
-                  icon={<DirectionsCarIcon />}
-                  label={status.isGenerating ? 'Generando' : 'Detenido'}
-                  className={classes.statusChip}
-                  style={{ 
-                    backgroundColor: status.isGenerating ? 'rgba(76,175,80,0.8)' : 'rgba(158,158,158,0.8)' 
-                  }}
-                />
-                <Chip
-                  icon={<DirectionsCarIcon />}
-                  label={`${Number(status.generatedCount || 0).toLocaleString()} vehículos`}
-                  className={classes.countChip}
-                />
-              </Box>
-
-              {/* Botones de control */}
-              <Box display="flex" gap={2}>
-                <Button
-                  onClick={start}
-                  className={classes.btnStart}
-                  startIcon={working ? <CircularProgress size={18} color="inherit" /> : <PlayArrowIcon />}
-                  disabled={working || status.isGenerating}
-                  variant="contained"
-                >
-                  Iniciar Simulación
-                </Button>
-
-                <Button
-                  onClick={stop}
-                  className={classes.btnStop}
-                  startIcon={working ? <CircularProgress size={18} color="inherit" /> : <StopIcon />}
-                  disabled={working || !status.isGenerating}
-                  variant="contained"
-                >
-                  Detener Simulación
-                </Button>
-              </Box>
-
-              {/* Progress indicator cuando está generando */}
-              {status.isGenerating && (
-                <Box className={classes.progressContainer} style={{ width: '100%', maxWidth: 300 }}>
-                  <LinearProgress 
-                    style={{ 
-                      backgroundColor: 'rgba(255,255,255,0.2)', 
-                      borderRadius: 8,
-                      height: 6 
-                    }}
-                    color="primary"
-                  />
-                </Box>
-              )}
-            </Box>
-          </Grid>
+          </Box>
         </Grid>
-      </CardContent>
-    </Card>
+
+        <Grid item>
+          <Box display="flex" flexDirection="column" alignItems="flex-end">
+            {/* Estado y contador */}
+            <Box display="flex" alignItems="center" style={{ marginBottom: 16 }}>
+              <Chip
+                icon={<DirectionsCarIcon />}
+                label={status.isGenerating ? 'Generando' : 'Detenido'}
+                className={classes.statusChip}
+                style={{ 
+                  backgroundColor: status.isGenerating ? '#c8e6c9' : '#f5f5f5',
+                  color: status.isGenerating ? '#2e7d32' : '#666'
+                }}
+              />
+              <Chip
+                icon={<DirectionsCarIcon />}
+                label={`${Number(status.generatedCount || 0).toLocaleString()} vehículos`}
+                className={classes.countChip}
+                style={{ marginLeft: 8 }}
+              />
+            </Box>
+
+            {/* Botones de control */}
+            <Box display="flex" alignItems="center">
+              <Button
+                onClick={start}
+                className={classes.btnStart}
+                startIcon={working ? <CircularProgress size={18} color="inherit" /> : <PlayArrowIcon />}
+                disabled={working || status.isGenerating}
+                variant="contained"
+              >
+                Iniciar Simulación
+              </Button>
+
+              <Button
+                onClick={stop}
+                className={classes.btnStop}
+                startIcon={working ? <CircularProgress size={18} color="inherit" /> : <StopIcon />}
+                disabled={working || !status.isGenerating}
+                variant="contained"
+              >
+                Detener Simulación
+              </Button>
+            </Box>
+
+            {/* Progress indicator cuando está generando */}
+            {status.isGenerating && (
+              <Box className={classes.progressContainer} style={{ width: '100%', maxWidth: 300, marginTop: 16 }}>
+                <LinearProgress color="primary" />
+              </Box>
+            )}
+          </Box>
+        </Grid>
+      </Grid>
+    </div>
   );
 }
